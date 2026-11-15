@@ -27,8 +27,8 @@
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
-          🎬
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
+          🍲
         </div>
         <div>
           <div class="flex items-center gap-2">
@@ -37,12 +37,12 @@
               AI 视觉已就绪
             </span>
           </div>
-          <p class="text-xs text-slate-500">门头识图 → 爆款编剧 → 角色锚点锁定 → 即梦 / 豆包（Seedance）专用分镜</p>
+          <p class="text-xs text-slate-500">餐饮门头识图 → 爆款编剧 → 角色锚点锁定 → 即梦 / 豆包（Seedance）专用分镜</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
         <button onclick="loadDemoResult()" class="text-xs sm:text-sm px-3.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 font-semibold transition flex items-center gap-1.5 shadow-sm">
-          <span>⚡ 免消耗演示模式</span>
+          <span>⚡ 免消耗演示模式（老潼关肉夹馍）</span>
         </button>
       </div>
     </div>
@@ -55,8 +55,8 @@
       <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-5">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <h2 class="font-bold text-slate-900 flex items-center gap-2 text-base">
-            <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">1</span>
-            输入门店信息
+            <span class="w-6 h-6 rounded-full bg-orange-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+            输入餐厅与门店信息
           </h2>
           <span class="text-xs text-slate-400">支持拍照识图或文字补充</span>
         </div>
@@ -64,19 +64,19 @@
         <!-- 门头上传区 -->
         <div>
           <label class="block text-sm font-semibold text-slate-700 mb-1.5">
-            上传门店门头照 <span class="text-indigo-600 font-normal">（强烈推荐，AI 视觉自动识图）</span>
+            上传餐厅门头照 <span class="text-orange-600 font-normal">（强烈推荐，AI 视觉识图识招牌）</span>
           </label>
-          <div id="dropZone" onclick="document.getElementById('imageInput').click()" class="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-4 text-center cursor-pointer transition bg-slate-50 hover:bg-indigo-50/30 relative overflow-hidden group">
+          <div id="dropZone" onclick="document.getElementById('imageInput').click()" class="border-2 border-dashed border-slate-300 hover:border-orange-500 rounded-xl p-4 text-center cursor-pointer transition bg-slate-50 hover:bg-orange-50/30 relative overflow-hidden group">
             <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)" />
             <div id="uploadPlaceholder" class="py-5 space-y-2">
               <div class="text-4xl group-hover:scale-110 transition transform">🏪</div>
-              <p class="text-sm font-semibold text-slate-700">点击上传或拖拽门头照片到此处</p>
-              <p class="text-xs text-slate-400">AI 自动解析店名、招牌色系、装修档次与业态属性</p>
+              <p class="text-sm font-semibold text-slate-700">点击上传或拖拽餐饮门头照片到此处</p>
+              <p class="text-xs text-slate-400">AI 自动解析店名、招牌特色、烟火气档次与主营风味</p>
             </div>
             <div id="imagePreviewBox" class="hidden relative">
               <img id="imagePreview" src="" alt="门头预览" class="max-h-52 mx-auto rounded-lg shadow-sm object-contain" />
               <button type="button" onclick="clearImage(event)" class="mt-2.5 text-xs text-red-600 hover:text-red-700 font-medium underline">
-                ✕ 移除并更换图片
+                ✕ 移除并更换照片
               </button>
             </div>
           </div>
@@ -84,25 +84,25 @@
 
         <!-- 文字补充门头 -->
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5">门店名称 / 补充描述</label>
-          <input id="storeText" type="text" placeholder="未传图片时必填，例如：芝华仕头等舱功能沙发万达旗舰店" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50" />
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">餐厅店名 / 特色风味描述</label>
+          <input id="storeText" type="text" value="老潼关手工肉夹馍·老陕正宗红油凉皮（街边烟火气特色老店）" placeholder="例如：老潼关现烤肉夹馍老陕风味店" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 bg-slate-50/50" />
         </div>
 
-        <!-- 行业专属预设与切入策略 -->
+        <!-- 餐饮垂直品类模型 -->
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5">所属行业与品类模型</label>
-          <select id="industryType" class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <option value="家居建材（头等舱/软体/全屋定制/家具大件），强调工厂直供底价、零重力体验、真皮回弹与做工质感" selected>🛋️ 家居软体/沙发/建材（敏华/芝华仕专属模型）</option>
-            <option value="餐饮美食（火锅/烧烤/特色正餐/快餐小吃），强调烟火气、热气腾腾出锅特写、超值双人餐抢购">🍲 餐饮美食/火锅/小吃（烟火气高转化）</option>
-            <option value="休闲美业（足道养生/SPA/美发/沉浸式体验），强调空间静谧高级、舒压解乏、专业手法与限时特惠">💆 休闲娱乐/养生美业（沉浸体验风）</option>
-            <option value="综合零售（数码/百货/日用/母婴），强调开箱实测、品质对比、工厂直供性价比">🛍️ 本地综合零售/商超（实测福利风）</option>
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">餐饮细分品类与调性模型</label>
+          <select id="industryType" class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+            <option value="地方特色小吃快餐（如潼关肉夹馍/凉皮/手工面），强调现烤千层掉渣、腊汁肉爆汁、烟火气浓郁、性价比极高" selected>🍲 地方特色小吃/快餐面点（潼关肉夹馍/凉皮专属模型）</option>
+            <option value="火锅串串/烧烤大排档，强调热气腾腾锅底红亮、大串烤肉滋滋冒油、夜市热闹氛围与超值聚餐福利">🔥 火锅串串/烧烤排档（夜市烟火气高转化）</option>
+            <option value="特色正餐/地方菜馆，强调招牌硬菜现炒现做、锅气十足、家庭聚餐与老字号口碑">🥢 特色正餐/私房菜馆（重锅气与招牌菜）</option>
+            <option value="新中式茶饮/甜品烘焙，强调高颜值出片、新鲜原叶鲜奶、现烤出炉爆浆与年轻达人打卡">🧋 奶茶饮品/烘焙甜品（高颜值出片探店）</option>
           </select>
         </div>
 
         <!-- 核心卖点 / 团购套餐 -->
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5">核心卖点 / 团购套餐福利（选填）</label>
-          <textarea id="sellingPoints" rows="2" placeholder="例如：原价12999头等舱真皮功能沙发，门店周年庆直降3000，进店免费送原装皮具保养礼包；不填时 AI 将根据行业自动策划爆款卖点" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50"></textarea>
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">团购福利套餐 / 核心卖点</label>
+          <textarea id="sellingPoints" rows="2" placeholder="例如：现烤千层酥脆肉夹馍 + 秘制老潼关红油凉皮，原价38元招牌双人餐现在抖音限时只要19.9，老汤免费续！" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 bg-slate-50/50">现烤千层酥脆肉夹馍 + 秘制老潼关红油凉皮，原价38元招牌双人餐现在抖音限时只要19.9，老汤免费续！</textarea>
         </div>
 
         <!-- 视频时长选择 -->
@@ -111,23 +111,23 @@
           <div class="grid grid-cols-3 gap-2.5">
             <label class="cursor-pointer">
               <input type="radio" name="duration" value="30" class="peer hidden" checked />
-              <div class="py-2.5 px-3 text-center rounded-xl border border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 transition">
+              <div class="py-2.5 px-3 text-center rounded-xl border border-slate-200 peer-checked:border-orange-600 peer-checked:bg-orange-50 peer-checked:text-orange-700 transition">
                 <div class="font-bold text-sm">30 秒</div>
-                <div class="text-[11px] text-slate-500">6 个分镜 · 黄金快节奏</div>
+                <div class="text-[11px] text-slate-500">6 个分镜 · 餐饮黄金完播</div>
               </div>
             </label>
             <label class="cursor-pointer">
               <input type="radio" name="duration" value="45" class="peer hidden" />
-              <div class="py-2.5 px-3 text-center rounded-xl border border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 transition">
+              <div class="py-2.5 px-3 text-center rounded-xl border border-slate-200 peer-checked:border-orange-600 peer-checked:bg-orange-50 peer-checked:text-orange-700 transition">
                 <div class="font-bold text-sm">45 秒</div>
-                <div class="text-[11px] text-slate-500">9 个分镜 · 标准完备型</div>
+                <div class="text-[11px] text-slate-500">9 个分镜 · 菜品深度呈现</div>
               </div>
             </label>
             <label class="cursor-pointer">
               <input type="radio" name="duration" value="60" class="peer hidden" />
-              <div class="py-2.5 px-3 text-center rounded-xl border border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 transition">
+              <div class="py-2.5 px-3 text-center rounded-xl border border-slate-200 peer-checked:border-orange-600 peer-checked:bg-orange-50 peer-checked:text-orange-700 transition">
                 <div class="font-bold text-sm">60 秒</div>
-                <div class="text-[11px] text-slate-500">12 个分镜 · 深度种草全景</div>
+                <div class="text-[11px] text-slate-500">12 个分镜 · 全套宴席种草</div>
               </div>
             </label>
           </div>
@@ -137,27 +137,27 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-sm font-semibold text-slate-700 mb-1.5">探店脚本风格</label>
-            <select id="videoStyle" class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="接地气本地达人真实测评风（开头强反差钩子+实在体验+福利收尾）">本地达人真实测评风</option>
-              <option value="剧情反转省钱攻略风（误以为高不可攀进店真香打脸）">剧情反转省钱攻略风</option>
-              <option value="沉浸式第一视角逛店（少废话多细节，突出高级质感与舒适感）">沉浸式第一视角逛店</option>
-              <option value="老板/内行人揭秘福利风（揭露行业高价内幕，直奔工厂出厂价）">内行人揭秘福利风</option>
+            <select id="videoStyle" class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <option value="本地吃货达人真实测评风（开头强反差钩子+大口吃播真实特写+福利收尾）" selected>吃货达人真实测评风</option>
+              <option value="剧情反转省钱攻略风（误以为吃不起名店结果账单真香打脸）">剧情反转省钱打脸风</option>
+              <option value="沉浸式后厨第一视角（少废话多声效，突出制作过程与酥脆出汁）">沉浸式后厨解压风</option>
+              <option value="老板/大厨真诚大放福利风（大厨亮招牌手艺，老板亲自放神价券）">老掌柜放漏福利风</option>
             </select>
           </div>
           <div>
             <label class="block text-sm font-semibold text-slate-700 mb-1.5">达人形象设定</label>
-            <select id="hostPersona" class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="24岁亲和力邻家女生，鹅蛋脸，微卷浅棕长发，米白色休闲针织开衫搭配浅蓝牛仔裤，笑容灿烂治愈接地气">亲和力邻家女生（百搭）</option>
-              <option value="28岁清爽干练男测评官，帅气利落短发，黑色工装休闲夹克，眼神真诚有信赖感">清爽干练男测评官</option>
-              <option value="26岁时尚精致女生，波浪长发微卷，驼色轻奢风衣，气质知性大方">轻奢气质女达人</option>
-              <option value="32岁朴实热情本地大哥，微胖有福相，藏青色纯棉T恤，像邻家熟人般真诚">热情实在本地大哥</option>
+            <select id="hostPersona" class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <option value="24岁亲和力邻家女生，扎清爽高马尾，浅米色工装休闲衬衫，笑容灿烂治愈，地道吃货属性，真实接地气" selected>活力吃货邻家女生（百搭）</option>
+              <option value="27岁阳光干练男吃播，短发干净利落，黑色工装围裙与纯色短袖，说话有底气有信赖感">阳光干练男探店官</option>
+              <option value="32岁朴实热情老陕大哥，微胖有福相，藏青色纯棉T恤，像老街坊熟人般实在">热情豪爽本地大哥</option>
+              <option value="25岁精致美食博主女生，淡妆丸子头，浅黄休闲毛衣，吃相优雅治愈有食欲">精致治愈系女吃播</option>
             </select>
           </div>
         </div>
 
         <!-- 生成按钮 -->
-        <button id="generateBtn" onclick="generatePrompts()" class="w-full py-4 px-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 active:from-indigo-800 active:to-violet-800 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 text-base">
-          <span>🚀 一键生成全套探店提示词与分镜</span>
+        <button id="generateBtn" onclick="generatePrompts()" class="w-full py-4 px-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 active:from-orange-800 active:to-amber-800 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 text-base">
+          <span>🚀 一键生成餐饮探店提示词与分镜全案</span>
         </button>
       </div>
     </section>
@@ -166,25 +166,25 @@
     <section class="lg:col-span-7 space-y-5">
       <!-- 初始空状态 -->
       <div id="emptyState" class="bg-white rounded-2xl p-10 border border-slate-200 text-center space-y-4 h-full flex flex-col items-center justify-center min-h-[460px]">
-        <div class="w-20 h-20 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-4xl shadow-inner">🎬</div>
+        <div class="w-20 h-20 rounded-3xl bg-orange-50 text-orange-600 flex items-center justify-center text-4xl shadow-inner">🍜</div>
         <div class="space-y-1.5">
-          <h3 class="text-lg font-bold text-slate-800">等待生成 AI 探店分镜方案</h3>
+          <h3 class="text-lg font-bold text-slate-800">等待生成餐饮探店分镜方案</h3>
           <p class="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-            在左侧上传门店门头照，AI 将自动执行<strong>门头识别、编剧策划、角色外貌锁定与 Seedance 物理运镜编译</strong>。
+            在左侧上传餐饮门头照，AI 将自动执行<strong>门头识别、编剧策划、食欲动作与 Seedance 物理运镜编译</strong>。
           </p>
         </div>
         <div class="pt-2 flex flex-col sm:flex-row gap-2.5">
           <button onclick="loadDemoResult()" class="text-xs px-4 py-2 bg-amber-50 text-amber-800 border border-amber-300 rounded-xl hover:bg-amber-100 font-semibold transition">
-            ⚡ 体验芝华仕头等舱沙发演示案例
+            ⚡ 体验老潼关肉夹馍标准案例
           </button>
         </div>
       </div>
 
       <!-- 加载中状态 -->
       <div id="loadingState" class="hidden bg-white rounded-2xl p-12 border border-slate-200 text-center space-y-4 min-h-[460px] flex flex-col items-center justify-center">
-        <div class="w-14 h-14 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        <div class="w-14 h-14 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin"></div>
         <div class="space-y-1.5">
-          <h3 class="text-base font-bold text-slate-800" id="loadingText">正在识图分析门头并生成探店方案...</h3>
+          <h3 class="text-base font-bold text-slate-800" id="loadingText">正在识图分析餐饮门头并生成探店方案...</h3>
           <p class="text-xs text-slate-400">正在锁定人物定妆底图、注入环境一致性锚点并编译 5 秒物理运镜（约需 8~15 秒）</p>
         </div>
       </div>
@@ -192,13 +192,13 @@
       <!-- 生成结果容器 -->
       <div id="resultContainer" class="hidden space-y-5">
         <!-- 0. AI门头诊断与爆款策略摘要 -->
-        <div class="bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 rounded-2xl p-5 text-white shadow-md">
+        <div class="bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 rounded-2xl p-5 text-white shadow-md">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-[11px] font-bold tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full uppercase">AI 门店诊断与爆款策略</span>
-            <span id="resMeta" class="text-xs text-indigo-100 font-medium"></span>
+            <span class="text-[11px] font-bold tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full uppercase">AI 餐饮诊断与爆款策略</span>
+            <span id="resMeta" class="text-xs text-amber-100 font-medium"></span>
           </div>
           <h3 id="resTitle" class="text-lg font-bold"></h3>
-          <p id="resAnalysis" class="text-xs sm:text-sm text-indigo-100 mt-1.5 leading-relaxed"></p>
+          <p id="resAnalysis" class="text-xs sm:text-sm text-amber-100 mt-1.5 leading-relaxed"></p>
         </div>
 
         <!-- 1. 前置底图提示词（锁死一致性） -->
@@ -206,10 +206,10 @@
           <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
             <div>
               <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-1.5">
-                <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs flex items-center justify-center font-bold">1</span>
+                <span class="w-5 h-5 rounded-full bg-orange-100 text-orange-700 text-xs flex items-center justify-center font-bold">1</span>
                 第一步：生成「一致性参考底图」（在即梦先出图）
               </h3>
-              <p class="text-xs text-slate-500 mt-0.5">出好这两张底图后作为后续所有镜头的参考图，彻底锁定人脸与门店风格</p>
+              <p class="text-xs text-slate-500 mt-0.5">出好这两张底图后作为后续所有镜头的参考图，彻底锁定达人长相与餐厅风格</p>
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -217,8 +217,8 @@
             <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200 flex flex-col justify-between gap-2.5">
               <div>
                 <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded">1. 达人白底定妆照（9:16）</span>
-                  <button onclick="copyText('charPromptText', this)" class="text-xs px-2.5 py-1 bg-white border border-slate-300 hover:border-indigo-500 hover:text-indigo-600 rounded-lg font-medium transition shadow-sm">复制</button>
+                  <span class="text-xs font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded">1. 达人白底定妆照（9:16）</span>
+                  <button onclick="copyText('charPromptText', this)" class="text-xs px-2.5 py-1 bg-white border border-slate-300 hover:border-orange-500 hover:text-orange-600 rounded-lg font-medium transition shadow-sm">复制</button>
                 </div>
                 <p id="charPromptText" class="text-xs text-slate-700 leading-relaxed font-mono bg-white p-2.5 rounded-lg border border-slate-200/80"></p>
               </div>
@@ -227,7 +227,7 @@
             <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200 flex flex-col justify-between gap-2.5">
               <div>
                 <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">2. 店内主场景空镜图（9:16）</span>
+                  <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">2. 餐厅主场景空镜图（9:16）</span>
                   <button onclick="copyText('scenePromptText', this)" class="text-xs px-2.5 py-1 bg-white border border-slate-300 hover:border-emerald-500 hover:text-emerald-600 rounded-lg font-medium transition shadow-sm">复制</button>
                 </div>
                 <p id="scenePromptText" class="text-xs text-slate-700 leading-relaxed font-mono bg-white p-2.5 rounded-lg border border-slate-200/80"></p>
@@ -241,12 +241,12 @@
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
             <div>
               <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-1.5">
-                <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs flex items-center justify-center font-bold">2</span>
+                <span class="w-5 h-5 rounded-full bg-orange-100 text-orange-700 text-xs flex items-center justify-center font-bold">2</span>
                 第二步：逐镜生成视频（复制进即梦 / 豆包 Seedance）
               </h3>
-              <p class="text-xs text-slate-500 mt-0.5">每镜固定 5 秒，已注入外貌与物理运镜指令，按卡片提示上传参考图即可</p>
+              <p class="text-xs text-slate-500 mt-0.5">每镜固定 5 秒，已注入外貌、菜品特写与物理运镜指令，按卡片提示上传参考图即可</p>
             </div>
-            <button onclick="copyAllShots(this)" class="text-xs px-3.5 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 rounded-lg font-bold transition shadow-sm">
+            <button onclick="copyAllShots(this)" class="text-xs px-3.5 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 rounded-lg font-bold transition shadow-sm">
               📋 一键复制全部分镜提示词
             </button>
           </div>
@@ -258,7 +258,7 @@
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
             <div>
               <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-1.5">
-                <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs flex items-center justify-center font-bold">3</span>
+                <span class="w-5 h-5 rounded-full bg-orange-100 text-orange-700 text-xs flex items-center justify-center font-bold">3</span>
                 第三步：剪映后期配音与脚本导出
               </h3>
               <p class="text-xs text-slate-500 mt-0.5">片段拼好后直接粘贴进剪映配音与自动字幕，支持全案导出存档</p>
@@ -338,34 +338,34 @@
 
     // 编译核心编剧与 Seedance 提示词 System Prompt
     function buildSystemPrompt(duration, shotCount, style, persona, industry) {
-      return `你是全球顶尖的「抖音本地生活短视频金牌导演与即梦/豆包Seedance视频提示词编译系统」。
-你的唯一任务是：基于用户上传的门店门头照（或门头文字描述）、行业属性、卖点与时长，策划并编译出一套即梦AI / 豆包视频(Seedance模型)开箱即用的分镜提示词全案。
+      return `你是全球顶尖的「抖音本地生活餐饮短视频金牌导演与即梦/豆包Seedance视频提示词编译系统」。
+你的唯一任务是：基于用户上传的餐饮门店门头照（或门头文字描述）、品类属性、菜品卖点与时长，策划并编译出一套即梦AI / 豆包视频(Seedance模型)开箱即用的分镜提示词全案。
 
 【当前业务约束】
-- 所属行业与品类模型：${industry}
+- 所属餐饮细分品类：${industry}
 - 达人固定外貌与服饰人设：${persona}
 - 脚本风格：${style}
 - 视频总时长：${duration} 秒，必须精准拆分为 ${shotCount} 个独立镜头，每个镜头严格固定 5 秒。
 
 【强制执行铁律】
-1. 语速与口播字数锁死：每 5 秒镜头的口播台词（voiceover）必须严格控制在 16~22 个汉字之间，口语化、有钩子、有情绪，严禁书面腔和堆砌形容词。
+1. 语速与口播字数锁死：每 5 秒镜头的口播台词（voiceover）必须严格控制在 16~22 个汉字之间，口语化、接地气、有食欲诱惑钩子、有情绪，严禁书面腔和堆砌形容词。
 2. 视觉一致性锚点锁死：
    - 凡有达人出镜的镜头，必须在 video_prompt 中严格复用固定的人设描述（${persona}），绝对禁止换装或变发型。
-   - 店内环境、灯光调性必须与门头照片所展现的装修档次与行业品类高度呼应。
+   - 店内环境、灯光调性必须与门头照片所展现的餐饮烟火气与装修档次高度呼应。
 3. 第 1 镜（00:00-00:05）特殊规则：
-   - 必须设计为「首帧锁定真实门头（ref_type: "上传【真实门头照片】作为首帧图"）」。镜头从门头招牌缓慢推入，达人从画面侧方推门店门走入并回头微笑招手示意。保持门头招牌文字 100% 真实不乱码。
+   - 必须设计为「首帧锁定真实门头（ref_type: "上传【真实门头照片】作为首帧图"）」。镜头从门头招牌缓慢推入，达人从画面侧方推门进店并回头微笑招手示意。保持门头招牌文字 100% 真实不乱码。
 4. 第 2 镜至第 ${shotCount} 镜规则：
-   - 达人出镜镜头标注 ref_type: "上传【达人定妆照 + 店内空镜图】"；纯产品/工艺/细节特写标注 ref_type: "上传【店内空镜图（或产品实拍）】"。
-5. 一镜一动作原则：每个 5 秒镜头只允许一个清晰、自然的物理动作（如推门、伸手按压真皮沙发回弹、一键电动开启平躺、端起碗展示等），禁止复杂连续动作。
-6. 提示词编译格式：video_prompt 必须用纯粹直观的镜头语言描述【景别 + 运镜方式 + 主体动作与神态 + 光影质感】，结尾固定追加：「，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印」。
+   - 达人吃播出镜镜头标注 ref_type: "上传【达人定妆照 + 店内空镜图】"；纯菜品/后厨操作/冒热气特写标注 ref_type: "上传【店内空镜图（或菜品实拍）】"。
+5. 一镜一动作原则：每个 5 秒镜头只允许一个清晰、自然的物理动作（如推门进店、手按压酥皮肉夹馍掉渣、筷子拌红油面皮、舀起滚烫高汤、大口咬下爆汁等），禁止复杂连续动作。
+6. 提示词编译格式：video_prompt 必须用纯粹直观的镜头语言描述【景别 + 运镜方式 + 主体动作神态/菜品色泽热气 + 光影质感】，结尾固定追加：「，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印」。
 
 【输出格式要求】
 只输出纯 JSON，不要包含任何 markdown 解释或多余前缀，JSON 结构如下：
 {
-  "store_title": "识别出的门店名称及探店主题标题",
-  "store_analysis": "一句话说明从门头识别出的行业特征、装修档次及本脚本采用的爆款切入钩子策略",
-  "character_prompt": "用于生成达人白底定妆照的生图提示词（9:16竖屏，纯白摄影棚背景，正面全身/半身，超写实真性质感）",
-  "scene_prompt": "用于生成店内主场景空镜底图的生图提示词（9:16竖屏，无人纯空镜，全景展示，符合门头档次，电影级写实摄影）",
+  "store_title": "识别出的餐饮店名及探店主题标题",
+  "store_analysis": "一句话说明从门头识别出的餐饮品类特色、装修档次及本脚本采用的爆款切入钩子策略",
+  "character_prompt": "用于生成达人白底定妆照的生图提示词（9:16竖屏，纯白摄影棚背景，正面全身/半身，超写实真性质感，餐饮吃货服饰）",
+  "scene_prompt": "用于生成店内主场景空镜底图的生图提示词（9:16竖屏，无人纯空镜，全景展示，老字号餐饮烟火气，电影级写实摄影）",
   "shots": [
     {
       "shot_num": 1,
@@ -389,7 +389,7 @@
       const industry = document.getElementById('industryType').value;
 
       if (!uploadedImageBase64 && !storeText) {
-        alert('请至少上传一张门店门头照，或在输入框填写门店名称/描述！');
+        alert('请至少上传一张餐饮门头照，或在输入框填写店名描述！');
         return;
       }
 
@@ -401,8 +401,8 @@
       document.getElementById('generateBtn').classList.add('opacity-60');
 
       const systemPrompt = buildSystemPrompt(duration, shotCount, style, persona, industry);
-      const userText = `请为这家门店生成 ${duration} 秒（共 ${shotCount} 镜，每镜严格5秒）的 AI 探店视频分镜提示词全案。
-行业特征：${industry}
+      const userText = `请为这家餐饮门店生成 ${duration} 秒（共 ${shotCount} 镜，每镜严格5秒）的 AI 探店视频分镜提示词全案。
+细分行业：${industry}
 门头补充信息：${storeText || '请优先从上传的门头照片中智能提取店名与招牌细节'}
 核心卖点与福利：${sellingPoints || '请结合该行业爆款模式自动策划最具转化力的优惠福利与探店卖点'}
 指定脚本风格：${style}`;
@@ -462,7 +462,7 @@
       document.getElementById('emptyState').classList.add('hidden');
       document.getElementById('resultContainer').classList.remove('hidden');
 
-      document.getElementById('resTitle').textContent = data.store_title || 'AI 探店分镜执行全案';
+      document.getElementById('resTitle').textContent = data.store_title || 'AI 餐饮探店分镜执行全案';
       document.getElementById('resMeta').textContent = `总时长 ${duration} 秒 · 共 ${data.shots.length} 个 5秒分镜`;
       document.getElementById('resAnalysis').textContent = data.store_analysis || '';
       document.getElementById('charPromptText').textContent = data.character_prompt || '';
@@ -474,10 +474,11 @@
 
       data.shots.forEach((shot, index) => {
         allVoiceovers.push(`【镜${shot.shot_num} | ${shot.time_range}】${shot.voiceover}`);
-        const badgeColor = index === 0 ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-blue-50 text-blue-700 border-blue-200';
-        
+        const badgeColor = index === 0 ? 'bg-orange-100 text-orange-900 border-orange-300' : 'bg-blue-50 text-blue-700 border-blue-200';
+        const promptText = shot.video_prompt || shot.prompt || shot.description || '';
+
         const card = document.createElement('div');
-        card.className = 'rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-2.5 hover:border-indigo-400 transition';
+        card.className = 'rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-2.5 hover:border-orange-400 transition';
         card.innerHTML = `
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2">
@@ -485,16 +486,16 @@
               <span class="text-xs font-mono font-bold text-slate-700">${shot.time_range}</span>
               <span class="text-xs px-2 py-0.5 rounded border ${badgeColor} font-semibold">${shot.ref_type}</span>
             </div>
-            <button onclick="copyDirectText(this, ${index})" class="text-xs px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow-sm transition">
+            <button onclick="copyDirectText(this, ${index})" class="text-xs px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium shadow-sm transition">
               一键复制视频提示词
             </button>
           </div>
           <div class="text-xs text-slate-700 bg-white px-3 py-2 rounded-lg border border-slate-200/80">
             <span class="font-bold text-slate-900">🎙️ 口播台词：</span>“${shot.voiceover}”
-            <span class="ml-2 text-indigo-600 font-medium">(${shot.camera_move})</span>
+            <span class="ml-2 text-orange-600 font-medium">(${shot.camera_move})</span>
           </div>
           <div class="text-xs text-slate-800 leading-relaxed font-mono bg-white p-3 rounded-lg border border-slate-200 select-all">
-            ${shot.video_prompt}
+            ${promptText}
           </div>
         `;
         shotsContainer.appendChild(card);
@@ -540,7 +541,8 @@
 
     function copyDirectText(btn, shotIndex) {
       if (!currentGeneratedData || !currentGeneratedData.shots[shotIndex]) return;
-      const text = currentGeneratedData.shots[shotIndex].video_prompt;
+      const shot = currentGeneratedData.shots[shotIndex];
+      const text = shot.video_prompt || shot.prompt || shot.description || '';
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(() => showCopiedFeedback(btn)).catch(() => fallbackCopy(text, btn));
       } else {
@@ -550,9 +552,10 @@
 
     function copyAllShots(btn) {
       if (!currentGeneratedData) return;
-      const allText = currentGeneratedData.shots.map(s => 
-        `【分镜 ${s.shot_num} | ${s.time_range} | ${s.ref_type}】\n运镜与动作：${s.camera_move}\n口播台词：${s.voiceover}\nSeedance提示词：${s.video_prompt}`
-      ).join('\n\n');
+      const allText = currentGeneratedData.shots.map(s => {
+        const p = s.video_prompt || s.prompt || s.description || '';
+        return `【分镜 ${s.shot_num} | ${s.time_range} | ${s.ref_type}】\n运镜与动作：${s.camera_move}\n口播台词：${s.voiceover}\nSeedance提示词：${p}`;
+      }).join('\n\n');
       const targetBtn = btn || (window.event ? window.event.target : null);
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(allText).then(() => showCopiedFeedback(targetBtn)).catch(() => fallbackCopy(allText, targetBtn));
@@ -574,7 +577,8 @@
       content += `=================================================\n`;
       content += `【第二步：即梦 / 豆包 Seedance 分镜提示词】\n\n`;
       currentGeneratedData.shots.forEach(s => {
-        content += `【镜${s.shot_num} | ${s.time_range}】\n参考图建议：${s.ref_type}\n运镜：${s.camera_move}\n口播台词：${s.voiceover}\n画面提示词：${s.video_prompt}\n\n`;
+        const p = s.video_prompt || s.prompt || s.description || '';
+        content += `【镜${s.shot_num} | ${s.time_range}】\n参考图建议：${s.ref_type}\n运镜：${s.camera_move}\n口播台词：${s.voiceover}\n画面提示词：${p}\n\n`;
       });
       content += `=================================================\n`;
       content += `【第三步：剪映纯享版口播配音台词】\n\n`;
@@ -586,66 +590,66 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `AI探店分镜脚本_${(currentGeneratedData.store_title || '导出').slice(0, 16)}.txt`;
+      a.download = `AI餐饮探店分镜脚本_${(currentGeneratedData.store_title || '导出').slice(0, 16)}.txt`;
       a.click();
       URL.revokeObjectURL(url);
     }
 
-    // 免消耗演示模式（预载芝华仕沙发真实 30 秒 6 镜案例）
+    // 免消耗演示模式（纯餐饮·老潼关肉夹馍标准案例）
     function loadDemoResult() {
       const demoData = {
-        store_title: "【演示案例】芝华仕头等舱功能沙发万达旗舰店 · 工厂直供探店（30秒版）",
-        store_analysis: "现代轻奢软体家居门店，门头通透大气。采用「价格反差钩子 + 沉浸式真皮回弹体验 + 门店周年庆福利」的高转化本地生活闭环脚本。",
-        character_prompt: "24岁亲和力邻家女生，鹅蛋脸，温柔清澈杏眼，微卷浅棕色长发披肩，身穿简约米白色针织开衫与浅蓝修身牛仔裤，自然淡妆，笑容灿烂治愈接地气；正面半身定妆照，白色纯净背景，均匀柔和棚拍光，超写实影视级人物摄影，皮肤纹理真实细腻，比例9:16，4K画质，无文字无logo。",
-        scene_prompt: "现代简约轻奢家具旗舰店展厅内部，全景展示，宽敞明亮。暖色轨道射灯照亮深灰色与焦糖色真皮头等舱功能沙发，原木色地板，背景有绿植点缀与落地玻璃窗，纵深层次清晰，无人纯空镜，电影级写实摄影质感，4K高清，无文字无水印，比例9:16。",
+        store_title: "【演示案例】老潼关手工肉夹馍·老陕正宗红油凉皮老店（30秒餐饮爆款）",
+        store_analysis: "特色地方快餐老店，烟火气十足。采用「巷子深名店反差钩子 + 现切千层掉渣爆汁特写 + 19.9超值双人餐福利收口」的抖音本地生活黄金转化闭环。",
+        character_prompt: "24岁亲和力邻家女生，扎清爽利落高马尾，鹅蛋脸，温柔灵动杏眼，身穿浅米色工装休闲短袖衬衫搭配深色修身牛仔裤，自然淡妆，笑容灿烂治愈，地道吃货气质，真实接地气；正面半身定妆照，白色纯净背景，均匀柔和棚拍光，超写实真性质感人物摄影，皮肤纹理细腻，比例9:16，4K画质，无文字无logo。",
+        scene_prompt: "传统陕西特色老字号小吃馆内部，全景展示，整洁而充满烟火气。深色实木方桌长凳，暖黄色吊灯照亮后厨明档档口，灶台铝锅升腾起滚滚白雾热气，墙上挂着传统竹制菜单牌，纵深通透，无人纯空镜，电影级写实摄影质感，4K高清，无文字无水印，比例9:16。",
         shots: [
           {
             shot_num: 1,
             time_range: "00:00-00:05",
             ref_type: "上传【真实门头照片】作为首帧图",
             camera_move: "中景平缓推镜",
-            voiceover: "谁说大牌头等舱沙发一定贵？今天带你们扒一扒门店底价！",
-            video_prompt: "中景平缓推镜，保持门头招牌文字清晰真实不变，24岁亲和力邻家女生，微卷长发，身穿米白色针织开衫与浅蓝牛仔裤，从画面右侧轻快走入推开玻璃店门，回头对着镜头灿烂微笑挥手示意进店，自然日光光影，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
+            voiceover: "这家藏在老巷子里的潼关肉夹馍，今天终于被我挖到了！",
+            video_prompt: "中景平缓推镜，首帧保持真实门头招牌文字清晰不变，24岁亲和力女生扎高马尾身穿米色工装衬衫，快步走到门口伸手推开玻璃门，闻到香气回头对着镜头惊喜微笑并招手示意进店，自然街景日光光影，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
           },
           {
             shot_num: 2,
             time_range: "00:05-00:10",
             ref_type: "上传【达人定妆照 + 店内空镜图】",
-            camera_move: "中景轻微呼吸感跟拍",
-            voiceover: "一进门就被这套真皮头等舱拿捏了，质感真的太绝了！",
-            video_prompt: "中景轻微呼吸感手持运镜，现代轻奢家具展厅暖光下，24岁亲和力邻家女生，身穿米白色针织开衫，走到焦糖色真皮头等舱沙发旁，伸手轻轻按压宽大饱满的扶手展示高弹回弹力，面带惊喜神态，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
+            camera_move: "中景呼吸感手持跟拍",
+            voiceover: "现烤千层烧饼酥到掉渣，满满老汤腊汁肉一口爆汁！",
+            video_prompt: "中景轻微手持呼吸感跟拍，明档厨房暖光下，厨师戴手套用刀将金黄千层肉夹馍一刀切开，手指轻轻一按外皮咔嚓脆响掉渣特写，大块肥瘦相间的腊汁肉塞得满满当当，达人接过大口咬下，肉汁溢出，露出陶醉满足神情，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
           },
           {
             shot_num: 3,
             time_range: "00:10-00:15",
-            ref_type: "上传【达人定妆照 + 店内空镜图】",
-            camera_move: "侧向中近景平移",
-            voiceover: "一键电动开启零重力，下班往这一躺浑身疲惫直接全消！",
-            video_prompt: "侧向中近景平稳横向移动，现代轻奢展厅背景，24岁亲和力邻家女生，身穿米白色针织开衫，舒适地半躺在焦糖色真皮功能沙发上，电动脚托缓缓抬升平展，女生舒适地闭眼展露惬意放松的微笑，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
+            ref_type: "上传【店内空镜图（或凉皮实拍）】",
+            camera_move: "侧向中近景平移特写",
+            voiceover: "再来一碗秘制老陕红油凉皮，酸辣劲道裹满芝麻酱香！",
+            video_prompt: "侧向中近景平滑移动特写，大碗中晶莹剔透的面皮层层切好，师傅利落舀起一勺鲜亮红油辣椒油淋下，金黄面筋与翠绿黄瓜丝翻拌均匀，一双筷子挑起一大口挂满红油的凉皮吸溜入口，晶莹诱人，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
           },
           {
             shot_num: 4,
             time_range: "00:15-00:20",
-            ref_type: "上传【店内空镜图（或实拍皮样）】",
-            camera_move: "微距特写慢速推进",
-            voiceover: "进口头层牛皮耐磨抗刮，家里有猫有娃也完全不用慌。",
-            video_prompt: "微距特写镜头缓慢平滑推近，展厅暖色射灯下，一只白皙的手轻轻抚摸焦糖色进口头层牛皮沙发的天然细腻皮纹与双线车缝线工艺，真皮呈现温润柔光，背景浅景深虚化，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
+            ref_type: "上传【店内空镜图（或老汤实拍）】",
+            camera_move: "微距特写慢推",
+            voiceover: "每天现熬老母鸡大骨高汤，喝上一口从头暖到脚！",
+            video_prompt: "微距特写镜头缓慢推进，大不锈钢深锅里熬制的老母鸡大骨高汤剧烈翻滚冒出浓浓白雾热气，汤汁浓白如奶，师傅用大汤勺舀起滚烫高汤缓缓倾倒回锅中，水花四溅香气蒸腾，浅景深虚化背景，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
           },
           {
             shot_num: 5,
             time_range: "00:20-00:25",
             ref_type: "上传【达人定妆照 + 店内空镜图】",
-            camera_move: "正前方中景固定镜头",
-            voiceover: "关键现在周年庆直降好几千，还送原厂全套抱枕大礼包！",
-            video_prompt: "正前方中景固定机位，现代轻奢展厅背景，24岁亲和力邻家女生，微卷长发，身穿米白色针织开衫，坐在沙发上身体微微前倾，双手比出惊喜手势对着镜头热情解说，眼神真诚有感染力，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
+            camera_move: "中景固定机位",
+            voiceover: "原价38的双人招牌套餐，今天老板放福利只要19块9！",
+            video_prompt: "中景固定机位，中式木桌上摆满两碗红油凉皮和两个金黄肉夹馍，24岁亲和力女生坐在桌前双手端着餐盘对着镜头热情展示，眼神真诚兴奋有感染力，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
           },
           {
             shot_num: 6,
             time_range: "00:25-00:30",
             ref_type: "上传【达人定妆照 + 店内空镜图】",
-            camera_move: "中近景轻微推镜",
-            voiceover: "想给家里换沙发的赶紧点左下角定位，来门店亲自试躺！",
-            video_prompt: "中近景轻微缓慢推近，展厅背景，24岁亲和力邻家女生，身穿米白色针织开衫，坐在沙发上左手自然指向画面左下方定位区域，右手竖起大拇指点赞，笑容爽朗点头致意，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
+            camera_move: "中近景微推",
+            voiceover: "想吃地道老陕风味的赶紧点左下角，手慢可就抢光了！",
+            video_prompt: "中近景微小推镜，达人坐在木桌前，左手指向画面左下方团购定位区域，右手竖起大拇指点赞，笑容爽朗治愈，桌上美食热气袅袅，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
           }
         ]
       };
