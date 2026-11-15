@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 探店视频分镜与提示词工作台（即梦 / 豆包专用）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+  <!-- 顶部导航栏（无任何 API Key 或模型配置入口，纯后台智能运营） -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
+          🎬
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">AI 探店视频分镜与提示词工作台</h1>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+              AI 视觉已就绪
+            </span>
+          </div>
+          <p class="text-xs text-slate-500">门头识图 → 爆款编剧 → 角色锚点锁定 → 即梦 / 豆包（Seedance）专用分镜</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="loadDemoResult()" class="text-xs sm:text-sm px-3.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 font-semibold transition flex items-center gap-1.5 shadow-sm">
+          <span>⚡ 免消耗演示模式</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主工作区：左右分栏 -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- 左侧：输入控制面板 (占5列) -->
+    <section class="lg:col-span-5 space-y-5">
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h2 class="font-bold text-slate-900 flex items-center gap-2 text-base">
+            <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+            输入门店信息
+          </h2>
+          <span class="text-xs text-slate-400">支持拍照识图或文字补充</span>
+        </div>
+
+        <!-- 门头上传区 -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+            上传门店门头照 <span class="text-indigo-600 font-normal">（强烈推荐，AI 视觉自动识图）</span>
+          </label>
+          <div id="dropZone" onclick="document.getElementById('imageInput').click()" class="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-4 text-center cursor-pointer transition bg-slate-50 hover:bg-indigo-50/30 relative overflow-hidden group">
+            <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)" />
+            <div id="uploadPlaceholder" class="py-5 space-y-2">
+              <div class="text-4xl group-hover:scale-110 transition transform">🏪</div>
+              <p class="text-sm font-semibold text-slate-700">点击上传或拖拽门头照片到此处</p>
+              <p class="text-xs text-slate-400">AI 自动解析店名、招牌色系、装修档次与业态属性</p>
+            </div>
+            <div id="imagePreviewBox" class="hidden relative">
+              <img id="imagePreview" src="" alt="门头预览" class="max-h-52 mx-auto rounded-lg shadow-sm object-contain" />
+              <button type="button" onclick="clearImage(event)" class="mt-2.5 text-xs text-red-600 hover:text-red-700 font-medium underline">
+                ✕ 移除并更换图片
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 文字补充门头 -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">门店名称 / 补充描述</label>
+          <input id="storeText" type="text" placeholder="未传图片时必填，例如：芝华仕头等舱功能沙发万达旗舰店" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50" />
+        </div>
+
+        <!-- 行业专属预设与切入策略 -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">所属行业与品类模型</label>
+          <select id="industryType" class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="家居建材（头等舱/软体/全屋定制/家具大件），强调工厂直供底价、零重力体验、真皮回弹与做工质感" selected>🛋️ 家居软体/沙发/建材（敏华/芝华仕专属模型）</option>
+            <option value="餐饮美食（火锅/烧烤/特色正餐/快餐小吃），强调烟火气、热气腾腾出锅特写、超值双人餐抢购">🍲 餐饮美食/火锅/小吃（烟火气高转化）</option>
+            <option value="休闲美业（足道养生/SPA/美发/沉浸式体验），强调空间静谧高级、舒压解乏、专业手法与限时特惠">💆 休闲娱乐/养生美业（沉浸体验风）</option>
+            <option value="综合零售（数码/百货/日用/母婴），强调开箱实测、品质对比、工厂直供性价比">🛍️ 本地综合零售/商超（实测福利风）</option>
+          </select>
+        </div>
+
+        <!-- 核心卖点 / 团购套餐 -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">核心卖点 / 团购套餐福利（选填）</label>
+          <textarea id="sellingPoints" rows="2" placeholder="例如：原价12999头等舱真皮功能沙发，门店周年庆直降3000，进店免费送原装皮具保养礼包；不填时 AI 将根据行业自动策划爆款卖点" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50"></textarea>
+        </div>
+
+        <!-- 视频时长选择 -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">目标视频总时长（自动按 5 秒/镜黄金节奏拆解）</label>
+          <div class="grid grid-cols-3 gap-2.5">
+            <label class="cursor-pointer">
+              <input type="radio" name="duration" value="30" class="peer hidden" checked />
+              <div class="py-2.5 px-3 text-center rounded-xl border border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 transition">
+                <div class="font-bold text-sm">30 秒</div>
+                <div class="text-[11px] text-slate-500">6 个分镜 · 黄金快节奏</div>
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="duration" value="45" class="peer hidden" />
+              <div class="py-2.5 px-3 text-center rounded-xl border border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 transition">
+                <div class="font-bold text-sm">45 秒</div>
+                <div class="text-[11px] text-slate-500">9 个分镜 · 标准完备型</div>
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="duration" value="60" class="peer hidden" />
+              <div class="py-2.5 px-3 text-center rounded-xl border border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 transition">
+                <div class="font-bold text-sm">60 秒</div>
+                <div class="text-[11px] text-slate-500">12 个分镜 · 深度种草全景</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 探店风格与人设 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">探店脚本风格</label>
+            <select id="videoStyle" class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="接地气本地达人真实测评风（开头强反差钩子+实在体验+福利收尾）">本地达人真实测评风</option>
+              <option value="剧情反转省钱攻略风（误以为高不可攀进店真香打脸）">剧情反转省钱攻略风</option>
+              <option value="沉浸式第一视角逛店（少废话多细节，突出高级质感与舒适感）">沉浸式第一视角逛店</option>
+              <option value="老板/内行人揭秘福利风（揭露行业高价内幕，直奔工厂出厂价）">内行人揭秘福利风</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">达人形象设定</label>
+            <select id="hostPersona" class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="24岁亲和力邻家女生，鹅蛋脸，微卷浅棕长发，米白色休闲针织开衫搭配浅蓝牛仔裤，笑容灿烂治愈接地气">亲和力邻家女生（百搭）</option>
+              <option value="28岁清爽干练男测评官，帅气利落短发，黑色工装休闲夹克，眼神真诚有信赖感">清爽干练男测评官</option>
+              <option value="26岁时尚精致女生，波浪长发微卷，驼色轻奢风衣，气质知性大方">轻奢气质女达人</option>
+              <option value="32岁朴实热情本地大哥，微胖有福相，藏青色纯棉T恤，像邻家熟人般真诚">热情实在本地大哥</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 生成按钮 -->
+        <button id="generateBtn" onclick="generatePrompts()" class="w-full py-4 px-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 active:from-indigo-800 active:to-violet-800 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 text-base">
+          <span>🚀 一键生成全套探店提示词与分镜</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 右侧：输出结果面板 (占7列) -->
+    <section class="lg:col-span-7 space-y-5">
+      <!-- 初始空状态 -->
+      <div id="emptyState" class="bg-white rounded-2xl p-10 border border-slate-200 text-center space-y-4 h-full flex flex-col items-center justify-center min-h-[460px]">
+        <div class="w-20 h-20 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-4xl shadow-inner">🎬</div>
+        <div class="space-y-1.5">
+          <h3 class="text-lg font-bold text-slate-800">等待生成 AI 探店分镜方案</h3>
+          <p class="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+            在左侧上传门店门头照，AI 将自动执行<strong>门头识别、编剧策划、角色外貌锁定与 Seedance 物理运镜编译</strong>。
+          </p>
+        </div>
+        <div class="pt-2 flex flex-col sm:flex-row gap-2.5">
+          <button onclick="loadDemoResult()" class="text-xs px-4 py-2 bg-amber-50 text-amber-800 border border-amber-300 rounded-xl hover:bg-amber-100 font-semibold transition">
+            ⚡ 体验芝华仕头等舱沙发演示案例
+          </button>
+        </div>
+      </div>
+
+      <!-- 加载中状态 -->
+      <div id="loadingState" class="hidden bg-white rounded-2xl p-12 border border-slate-200 text-center space-y-4 min-h-[460px] flex flex-col items-center justify-center">
+        <div class="w-14 h-14 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        <div class="space-y-1.5">
+          <h3 class="text-base font-bold text-slate-800" id="loadingText">正在识图分析门头并生成探店方案...</h3>
+          <p class="text-xs text-slate-400">正在锁定人物定妆底图、注入环境一致性锚点并编译 5 秒物理运镜（约需 8~15 秒）</p>
+        </div>
+      </div>
+
+      <!-- 生成结果容器 -->
+      <div id="resultContainer" class="hidden space-y-5">
+        <!-- 0. AI门头诊断与爆款策略摘要 -->
+        <div class="bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 rounded-2xl p-5 text-white shadow-md">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full uppercase">AI 门店诊断与爆款策略</span>
+            <span id="resMeta" class="text-xs text-indigo-100 font-medium"></span>
+          </div>
+          <h3 id="resTitle" class="text-lg font-bold"></h3>
+          <p id="resAnalysis" class="text-xs sm:text-sm text-indigo-100 mt-1.5 leading-relaxed"></p>
+        </div>
+
+        <!-- 1. 前置底图提示词（锁死一致性） -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <div>
+              <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs flex items-center justify-center font-bold">1</span>
+                第一步：生成「一致性参考底图」（在即梦先出图）
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">出好这两张底图后作为后续所有镜头的参考图，彻底锁定人脸与门店风格</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <!-- 达人定妆照 -->
+            <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200 flex flex-col justify-between gap-2.5">
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded">1. 达人白底定妆照（9:16）</span>
+                  <button onclick="copyText('charPromptText', this)" class="text-xs px-2.5 py-1 bg-white border border-slate-300 hover:border-indigo-500 hover:text-indigo-600 rounded-lg font-medium transition shadow-sm">复制</button>
+                </div>
+                <p id="charPromptText" class="text-xs text-slate-700 leading-relaxed font-mono bg-white p-2.5 rounded-lg border border-slate-200/80"></p>
+              </div>
+            </div>
+            <!-- 店内空镜参考图 -->
+            <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200 flex flex-col justify-between gap-2.5">
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">2. 店内主场景空镜图（9:16）</span>
+                  <button onclick="copyText('scenePromptText', this)" class="text-xs px-2.5 py-1 bg-white border border-slate-300 hover:border-emerald-500 hover:text-emerald-600 rounded-lg font-medium transition shadow-sm">复制</button>
+                </div>
+                <p id="scenePromptText" class="text-xs text-slate-700 leading-relaxed font-mono bg-white p-2.5 rounded-lg border border-slate-200/80"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. 分镜视频提示词卡片列表 -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+            <div>
+              <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs flex items-center justify-center font-bold">2</span>
+                第二步：逐镜生成视频（复制进即梦 / 豆包 Seedance）
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">每镜固定 5 秒，已注入外貌与物理运镜指令，按卡片提示上传参考图即可</p>
+            </div>
+            <button onclick="copyAllShots(this)" class="text-xs px-3.5 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 rounded-lg font-bold transition shadow-sm">
+              📋 一键复制全部分镜提示词
+            </button>
+          </div>
+          <div id="shotsList" class="space-y-3.5"></div>
+        </div>
+
+        <!-- 3. 剪映纯享版口播台词与脚本导出 -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+            <div>
+              <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs flex items-center justify-center font-bold">3</span>
+                第三步：剪映后期配音与脚本导出
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">片段拼好后直接粘贴进剪映配音与自动字幕，支持全案导出存档</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="downloadScriptFile()" class="text-xs px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 rounded-lg font-medium transition">
+                💾 导出 TXT 脚本
+              </button>
+              <button onclick="copyText('fullVoiceoverText', this)" class="text-xs px-3.5 py-1.5 bg-slate-900 text-white hover:bg-slate-800 rounded-lg font-medium transition shadow-sm">
+                🎙️ 复制纯台词
+              </button>
+            </div>
+          </div>
+          <div id="fullVoiceoverText" class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm text-slate-800 leading-relaxed whitespace-pre-line font-medium"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    <p>AI 探店视频分镜与提示词工作台 · 专为即梦AI / 豆包视频（Seedance 模型）深度定制</p>
+  </footer>
+
+  <script>
+    // 后台内置全自动 API 配置（不向前端暴露配置面板，完全后台运营）
+    const INTERNAL_CONFIG = {
+      baseUrl: 'https://apihub.agnes-ai.com/v1',
+      model: 'agnes-3.0-flash',
+      apiKey: 'sk-mQgzP8flI4DXC1F5aRNTKCfcw6ItZXvjPNlKkPdEO0Rf1NP9'
+    };
+
+    let uploadedImageBase64 = null;
+    let currentGeneratedData = null;
+
+    // 处理门头图片上传并压缩至 1024px
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxDim = 1024;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          uploadedImageBase64 = canvas.toDataURL('image/jpeg', 0.85);
+          document.getElementById('imagePreview').src = uploadedImageBase64;
+          document.getElementById('uploadPlaceholder').classList.add('hidden');
+          document.getElementById('imagePreviewBox').classList.remove('hidden');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearImage(e) {
+      if (e) e.stopPropagation();
+      uploadedImageBase64 = null;
+      document.getElementById('imageInput').value = '';
+      document.getElementById('uploadPlaceholder').classList.remove('hidden');
+      document.getElementById('imagePreviewBox').classList.add('hidden');
+    }
+
+    // 编译核心编剧与 Seedance 提示词 System Prompt
+    function buildSystemPrompt(duration, shotCount, style, persona, industry) {
+      return `你是全球顶尖的「抖音本地生活短视频金牌导演与即梦/豆包Seedance视频提示词编译系统」。
+你的唯一任务是：基于用户上传的门店门头照（或门头文字描述）、行业属性、卖点与时长，策划并编译出一套即梦AI / 豆包视频(Seedance模型)开箱即用的分镜提示词全案。
+
+【当前业务约束】
+- 所属行业与品类模型：${industry}
+- 达人固定外貌与服饰人设：${persona}
+- 脚本风格：${style}
+- 视频总时长：${duration} 秒，必须精准拆分为 ${shotCount} 个独立镜头，每个镜头严格固定 5 秒。
+
+【强制执行铁律】
+1. 语速与口播字数锁死：每 5 秒镜头的口播台词（voiceover）必须严格控制在 16~22 个汉字之间，口语化、有钩子、有情绪，严禁书面腔和堆砌形容词。
+2. 视觉一致性锚点锁死：
+   - 凡有达人出镜的镜头，必须在 video_prompt 中严格复用固定的人设描述（${persona}），绝对禁止换装或变发型。
+   - 店内环境、灯光调性必须与门头照片所展现的装修档次与行业品类高度呼应。
+3. 第 1 镜（00:00-00:05）特殊规则：
+   - 必须设计为「首帧锁定真实门头（ref_type: "上传【真实门头照片】作为首帧图"）」。镜头从门头招牌缓慢推入，达人从画面侧方推门店门走入并回头微笑招手示意。保持门头招牌文字 100% 真实不乱码。
+4. 第 2 镜至第 ${shotCount} 镜规则：
+   - 达人出镜镜头标注 ref_type: "上传【达人定妆照 + 店内空镜图】"；纯产品/工艺/细节特写标注 ref_type: "上传【店内空镜图（或产品实拍）】"。
+5. 一镜一动作原则：每个 5 秒镜头只允许一个清晰、自然的物理动作（如推门、伸手按压真皮沙发回弹、一键电动开启平躺、端起碗展示等），禁止复杂连续动作。
+6. 提示词编译格式：video_prompt 必须用纯粹直观的镜头语言描述【景别 + 运镜方式 + 主体动作与神态 + 光影质感】，结尾固定追加：「，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印」。
+
+【输出格式要求】
+只输出纯 JSON，不要包含任何 markdown 解释或多余前缀，JSON 结构如下：
+{
+  "store_title": "识别出的门店名称及探店主题标题",
+  "store_analysis": "一句话说明从门头识别出的行业特征、装修档次及本脚本采用的爆款切入钩子策略",
+  "character_prompt": "用于生成达人白底定妆照的生图提示词（9:16竖屏，纯白摄影棚背景，正面全身/半身，超写实真性质感）",
+  "scene_prompt": "用于生成店内主场景空镜底图的生图提示词（9:16竖屏，无人纯空镜，全景展示，符合门头档次，电影级写实摄影）",
+  "shots": [
+    {
+      "shot_num": 1,
+      "time_range": "00:00-00:05",
+      "ref_type": "上传【真实门头照片】作为首帧图",
+      "camera_move": "景别与运镜（如：中景平缓推镜）",
+      "voiceover": "16-22字强吸睛口播台词",
+      "video_prompt": "复制进即梦/豆包的完整5秒画面提示词"
+    }
+  ]
+}`;
+    }
+
+    async function generatePrompts() {
+      const storeText = document.getElementById('storeText').value.trim();
+      const sellingPoints = document.getElementById('sellingPoints').value.trim();
+      const duration = parseInt(document.querySelector('input[name="duration"]:checked').value, 10);
+      const shotCount = duration / 5;
+      const style = document.getElementById('videoStyle').value;
+      const persona = document.getElementById('hostPersona').value;
+      const industry = document.getElementById('industryType').value;
+
+      if (!uploadedImageBase64 && !storeText) {
+        alert('请至少上传一张门店门头照，或在输入框填写门店名称/描述！');
+        return;
+      }
+
+      // 切换加载中
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('resultContainer').classList.add('hidden');
+      document.getElementById('loadingState').classList.remove('hidden');
+      document.getElementById('generateBtn').disabled = true;
+      document.getElementById('generateBtn').classList.add('opacity-60');
+
+      const systemPrompt = buildSystemPrompt(duration, shotCount, style, persona, industry);
+      const userText = `请为这家门店生成 ${duration} 秒（共 ${shotCount} 镜，每镜严格5秒）的 AI 探店视频分镜提示词全案。
+行业特征：${industry}
+门头补充信息：${storeText || '请优先从上传的门头照片中智能提取店名与招牌细节'}
+核心卖点与福利：${sellingPoints || '请结合该行业爆款模式自动策划最具转化力的优惠福利与探店卖点'}
+指定脚本风格：${style}`;
+
+      const userContent = [{ type: 'text', text: userText }];
+      if (uploadedImageBase64) {
+        userContent.push({
+          type: 'image_url',
+          image_url: { url: uploadedImageBase64 }
+        });
+      }
+
+      try {
+        const response = await fetch(`${INTERNAL_CONFIG.baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${INTERNAL_CONFIG.apiKey}`
+          },
+          body: JSON.stringify({
+            model: INTERNAL_CONFIG.model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userContent }
+            ],
+            temperature: 0.7
+          })
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`AI 服务响应异常 (${response.status}): ${errText}`);
+        }
+
+        const data = await response.json();
+        let rawContent = data.choices[0].message.content.trim();
+        rawContent = rawContent.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
+        const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+        const jsonString = jsonMatch ? jsonMatch[0] : rawContent;
+        const parsed = JSON.parse(jsonString);
+
+        renderResult(parsed, duration, shotCount);
+      } catch (err) {
+        console.error(err);
+        alert('生成遇到问题：' + err.message + '\n\n已自动为您保留当前输入，您也可点击右上角「免消耗演示模式」快速预览标准方案。');
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('emptyState').classList.remove('hidden');
+      } finally {
+        document.getElementById('generateBtn').disabled = false;
+        document.getElementById('generateBtn').classList.remove('opacity-60');
+      }
+    }
+
+    function renderResult(data, duration, shotCount) {
+      currentGeneratedData = data;
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('resultContainer').classList.remove('hidden');
+
+      document.getElementById('resTitle').textContent = data.store_title || 'AI 探店分镜执行全案';
+      document.getElementById('resMeta').textContent = `总时长 ${duration} 秒 · 共 ${data.shots.length} 个 5秒分镜`;
+      document.getElementById('resAnalysis').textContent = data.store_analysis || '';
+      document.getElementById('charPromptText').textContent = data.character_prompt || '';
+      document.getElementById('scenePromptText').textContent = data.scene_prompt || '';
+
+      const shotsContainer = document.getElementById('shotsList');
+      shotsContainer.innerHTML = '';
+      let allVoiceovers = [];
+
+      data.shots.forEach((shot, index) => {
+        allVoiceovers.push(`【镜${shot.shot_num} | ${shot.time_range}】${shot.voiceover}`);
+        const badgeColor = index === 0 ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-blue-50 text-blue-700 border-blue-200';
+        
+        const card = document.createElement('div');
+        card.className = 'rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-2.5 hover:border-indigo-400 transition';
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-slate-900 text-white text-xs font-bold">镜 ${shot.shot_num}</span>
+              <span class="text-xs font-mono font-bold text-slate-700">${shot.time_range}</span>
+              <span class="text-xs px-2 py-0.5 rounded border ${badgeColor} font-semibold">${shot.ref_type}</span>
+            </div>
+            <button onclick="copyDirectText(this, ${index})" class="text-xs px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow-sm transition">
+              一键复制视频提示词
+            </button>
+          </div>
+          <div class="text-xs text-slate-700 bg-white px-3 py-2 rounded-lg border border-slate-200/80">
+            <span class="font-bold text-slate-900">🎙️ 口播台词：</span>“${shot.voiceover}”
+            <span class="ml-2 text-indigo-600 font-medium">(${shot.camera_move})</span>
+          </div>
+          <div class="text-xs text-slate-800 leading-relaxed font-mono bg-white p-3 rounded-lg border border-slate-200 select-all">
+            ${shot.video_prompt}
+          </div>
+        `;
+        shotsContainer.appendChild(card);
+      });
+
+      document.getElementById('fullVoiceoverText').textContent = allVoiceovers.join('\n\n');
+    }
+
+    // 复制剪贴板逻辑
+    function fallbackCopy(text, btnElement) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showCopiedFeedback(btnElement);
+      } catch (err) {
+        alert('复制失败，请手动选中文本复制');
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function showCopiedFeedback(btn) {
+      if (!btn) return;
+      const originalText = btn.textContent;
+      btn.textContent = '✅ 已复制';
+      setTimeout(() => {
+        btn.textContent = originalText;
+      }, 1500);
+    }
+
+    function copyText(elementId, btn) {
+      const text = document.getElementById(elementId).textContent.trim();
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => showCopiedFeedback(btn)).catch(() => fallbackCopy(text, btn));
+      } else {
+        fallbackCopy(text, btn);
+      }
+    }
+
+    function copyDirectText(btn, shotIndex) {
+      if (!currentGeneratedData || !currentGeneratedData.shots[shotIndex]) return;
+      const text = currentGeneratedData.shots[shotIndex].video_prompt;
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => showCopiedFeedback(btn)).catch(() => fallbackCopy(text, btn));
+      } else {
+        fallbackCopy(text, btn);
+      }
+    }
+
+    function copyAllShots(btn) {
+      if (!currentGeneratedData) return;
+      const allText = currentGeneratedData.shots.map(s => 
+        `【分镜 ${s.shot_num} | ${s.time_range} | ${s.ref_type}】\n运镜与动作：${s.camera_move}\n口播台词：${s.voiceover}\nSeedance提示词：${s.video_prompt}`
+      ).join('\n\n');
+      const targetBtn = btn || (window.event ? window.event.target : null);
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(allText).then(() => showCopiedFeedback(targetBtn)).catch(() => fallbackCopy(allText, targetBtn));
+      } else {
+        fallbackCopy(allText, targetBtn);
+      }
+    }
+
+    // 导出完整分镜 TXT 脚本
+    function downloadScriptFile() {
+      if (!currentGeneratedData) return;
+      let content = `=================================================\n`;
+      content += `${currentGeneratedData.store_title}\n`;
+      content += `策略摘要：${currentGeneratedData.store_analysis}\n`;
+      content += `=================================================\n\n`;
+      content += `【第一步：一致性参考底图提示词】\n\n`;
+      content += `1. 达人白底定妆照：\n${currentGeneratedData.character_prompt}\n\n`;
+      content += `2. 店内主场景空镜图：\n${currentGeneratedData.scene_prompt}\n\n`;
+      content += `=================================================\n`;
+      content += `【第二步：即梦 / 豆包 Seedance 分镜提示词】\n\n`;
+      currentGeneratedData.shots.forEach(s => {
+        content += `【镜${s.shot_num} | ${s.time_range}】\n参考图建议：${s.ref_type}\n运镜：${s.camera_move}\n口播台词：${s.voiceover}\n画面提示词：${s.video_prompt}\n\n`;
+      });
+      content += `=================================================\n`;
+      content += `【第三步：剪映纯享版口播配音台词】\n\n`;
+      currentGeneratedData.shots.forEach(s => {
+        content += `${s.voiceover}\n`;
+      });
+
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `AI探店分镜脚本_${(currentGeneratedData.store_title || '导出').slice(0, 16)}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // 免消耗演示模式（预载芝华仕沙发真实 30 秒 6 镜案例）
+    function loadDemoResult() {
+      const demoData = {
+        store_title: "【演示案例】芝华仕头等舱功能沙发万达旗舰店 · 工厂直供探店（30秒版）",
+        store_analysis: "现代轻奢软体家居门店，门头通透大气。采用「价格反差钩子 + 沉浸式真皮回弹体验 + 门店周年庆福利」的高转化本地生活闭环脚本。",
+        character_prompt: "24岁亲和力邻家女生，鹅蛋脸，温柔清澈杏眼，微卷浅棕色长发披肩，身穿简约米白色针织开衫与浅蓝修身牛仔裤，自然淡妆，笑容灿烂治愈接地气；正面半身定妆照，白色纯净背景，均匀柔和棚拍光，超写实影视级人物摄影，皮肤纹理真实细腻，比例9:16，4K画质，无文字无logo。",
+        scene_prompt: "现代简约轻奢家具旗舰店展厅内部，全景展示，宽敞明亮。暖色轨道射灯照亮深灰色与焦糖色真皮头等舱功能沙发，原木色地板，背景有绿植点缀与落地玻璃窗，纵深层次清晰，无人纯空镜，电影级写实摄影质感，4K高清，无文字无水印，比例9:16。",
+        shots: [
+          {
+            shot_num: 1,
+            time_range: "00:00-00:05",
+            ref_type: "上传【真实门头照片】作为首帧图",
+            camera_move: "中景平缓推镜",
+            voiceover: "谁说大牌头等舱沙发一定贵？今天带你们扒一扒门店底价！",
+            video_prompt: "中景平缓推镜，保持门头招牌文字清晰真实不变，24岁亲和力邻家女生，微卷长发，身穿米白色针织开衫与浅蓝牛仔裤，从画面右侧轻快走入推开玻璃店门，回头对着镜头灿烂微笑挥手示意进店，自然日光光影，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
+          },
+          {
+            shot_num: 2,
+            time_range: "00:05-00:10",
+            ref_type: "上传【达人定妆照 + 店内空镜图】",
+            camera_move: "中景轻微呼吸感跟拍",
+            voiceover: "一进门就被这套真皮头等舱拿捏了，质感真的太绝了！",
+            video_prompt: "中景轻微呼吸感手持运镜，现代轻奢家具展厅暖光下，24岁亲和力邻家女生，身穿米白色针织开衫，走到焦糖色真皮头等舱沙发旁，伸手轻轻按压宽大饱满的扶手展示高弹回弹力，面带惊喜神态，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
+          },
+          {
+            shot_num: 3,
+            time_range: "00:10-00:15",
+            ref_type: "上传【达人定妆照 + 店内空镜图】",
+            camera_move: "侧向中近景平移",
+            voiceover: "一键电动开启零重力，下班往这一躺浑身疲惫直接全消！",
+            video_prompt: "侧向中近景平稳横向移动，现代轻奢展厅背景，24岁亲和力邻家女生，身穿米白色针织开衫，舒适地半躺在焦糖色真皮功能沙发上，电动脚托缓缓抬升平展，女生舒适地闭眼展露惬意放松的微笑，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
+          },
+          {
+            shot_num: 4,
+            time_range: "00:15-00:20",
+            ref_type: "上传【店内空镜图（或实拍皮样）】",
+            camera_move: "微距特写慢速推进",
+            voiceover: "进口头层牛皮耐磨抗刮，家里有猫有娃也完全不用慌。",
+            video_prompt: "微距特写镜头缓慢平滑推近，展厅暖色射灯下，一只白皙的手轻轻抚摸焦糖色进口头层牛皮沙发的天然细腻皮纹与双线车缝线工艺，真皮呈现温润柔光，背景浅景深虚化，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
+          },
+          {
+            shot_num: 5,
+            time_range: "00:20-00:25",
+            ref_type: "上传【达人定妆照 + 店内空镜图】",
+            camera_move: "正前方中景固定镜头",
+            voiceover: "关键现在周年庆直降好几千，还送原厂全套抱枕大礼包！",
+            video_prompt: "正前方中景固定机位，现代轻奢展厅背景，24岁亲和力邻家女生，微卷长发，身穿米白色针织开衫，坐在沙发上身体微微前倾，双手比出惊喜手势对着镜头热情解说，眼神真诚有感染力，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
+          },
+          {
+            shot_num: 6,
+            time_range: "00:25-00:30",
+            ref_type: "上传【达人定妆照 + 店内空镜图】",
+            camera_move: "中近景轻微推镜",
+            voiceover: "想给家里换沙发的赶紧点左下角定位，来门店亲自试躺！",
+            video_prompt: "中近景轻微缓慢推近，展厅背景，24岁亲和力邻家女生，身穿米白色针织开衫，坐在沙发上左手自然指向画面左下方定位区域，右手竖起大拇指点赞，笑容爽朗点头致意，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印"
+          }
+        ]
+      };
+      renderResult(demoData, 30, 6);
+    }
+  </script>
+</body>
+</html>
