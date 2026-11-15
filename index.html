@@ -358,6 +358,7 @@
    - 达人吃播出镜镜头标注 ref_type: "上传【达人定妆照 + 店内空镜图】"；纯菜品/后厨操作/冒热气特写标注 ref_type: "上传【店内空镜图（或菜品实拍）】"。
 5. 一镜一动作原则：每个 5 秒镜头只允许一个清晰、自然的物理动作（如推门进店、手按压酥皮肉夹馍掉渣、筷子拌红油面皮、舀起滚烫高汤、大口咬下爆汁等），禁止复杂连续动作。
 6. 提示词编译格式：video_prompt 必须用纯粹直观的镜头语言描述【景别 + 运镜方式 + 主体动作神态/菜品色泽热气 + 光影质感】，结尾固定追加：「，9:16竖屏，真实实拍质感，4K高清，自然光影，无文字无水印」。
+7. 【语法防破损铁律】必须输出严格合法的标准 JSON，绝对禁止包含任何多余文字。字符串值内部严禁出现任何未经转义的半角英文双引号（"）！凡涉及店名、招牌字或台词引用，必须统一使用中文书名号《》、中文引号「」或反斜杠转义（\"），确保 JSON 语法 100% 绝对合法。
 
 【输出格式要求】
 只输出纯 JSON，不要包含任何 markdown 解释或多余前缀，JSON 结构如下：
@@ -377,6 +378,61 @@
     }
   ]
 }`;
+    }
+
+        // 工业级容错与自动修复 JSON 解析器
+    function safeJsonParse(rawStr) {
+      if (!rawStr || typeof rawStr !== 'string') {
+        throw new Error('未获取到有效的内容返回');
+      }
+
+      let cleaned = rawStr.trim();
+      // 剥离可能存在的 markdown 包裹符 (如 ```json ... ```)
+      cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+
+      // 提取最外层的大括号范围
+      const firstBrace = cleaned.indexOf('{');
+      const lastBrace = cleaned.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+      }
+
+      // 第一轮尝试：直接解析
+      try {
+        return JSON.parse(cleaned);
+      } catch (err1) {
+        console.warn('初次 JSON 解析失败，启动智能容错修复流程...', err1.message);
+      }
+
+      // 第二轮修复：清理尾部悬空逗号 (如 {"a": 1, })
+      let repaired = cleaned.replace(/,\s*([}\]])/g, '$1');
+
+      // 第三轮修复：处理未闭合括号（防止长文本意外截断）
+      const openBraces = (repaired.match(/\{/g) || []).length;
+      const closeBraces = (repaired.match(/\}/g) || []).length;
+      const openBrackets = (repaired.match(/\[/g) || []).length;
+      const closeBrackets = (repaired.match(/\]/g) || []).length;
+
+      for (let i = 0; i < openBrackets - closeBrackets; i++) repaired += ']';
+      for (let i = 0; i < openBraces - closeBraces; i++) repaired += '}';
+
+      try {
+        return JSON.parse(repaired);
+      } catch (err2) {
+        console.warn('括号修复后解析失败，启动深度引号修复...', err2.message);
+      }
+
+      // 第四轮修复：智能转义值内部未转义的双引号
+      try {
+        const fixedQuotes = repaired.replace(/:\s*"([\s\S]*?)"(?=\s*[,}\]])/g, (match, p1) => {
+          const sanitized = p1.replace(/"/g, '“');
+          return `: "${sanitized}"`;
+        });
+        return JSON.parse(fixedQuotes);
+      } catch (err3) {
+        console.error('所有自动修复策略均未成功:', err3);
+        throw new Error('分镜方案数据结构解析遇到波动，已自动为您保留输入，请再点一次生成即可。');
+      }
     }
 
     async function generatePrompts() {
@@ -424,6 +480,8 @@
           },
           body: JSON.stringify({
             model: INTERNAL_CONFIG.model,
+            response_format: { type: "json_object" },
+            max_tokens: 8192,
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userContent }
@@ -438,16 +496,13 @@
         }
 
         const data = await response.json();
-        let rawContent = data.choices[0].message.content.trim();
-        rawContent = rawContent.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
-        const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
-        const jsonString = jsonMatch ? jsonMatch[0] : rawContent;
-        const parsed = JSON.parse(jsonString);
+        const rawContent = data.choices[0].message.content;
+        const parsed = safeJsonParse(rawContent);
 
         renderResult(parsed, duration, shotCount);
       } catch (err) {
-        console.error(err);
-        alert('生成遇到问题：' + err.message + '\n\n已自动为您保留当前输入，您也可点击右上角「免消耗演示模式」快速预览标准方案。');
+        console.error('生成异常详情:', err);
+        alert('生成提示：' + err.message + '\n\n系统已保留您当前填写的信息，请直接再次点击生成即可！');
         document.getElementById('loadingState').classList.add('hidden');
         document.getElementById('emptyState').classList.remove('hidden');
       } finally {
