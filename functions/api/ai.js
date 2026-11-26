@@ -36,7 +36,7 @@ export async function onRequest(context) {
 
   const apiKey = (env.AGNES_API_KEY || '').trim();
   if (!apiKey) {
-    return jsonResponse({ error: 'Cloudflare Pages 环境变量未配置 AGNES_API_KEY' }, 500);
+    return jsonResponse({ error: '服务配置异常，请联系站长' }, 500);
   }
 
   let payload;
@@ -83,7 +83,7 @@ export async function onRequest(context) {
 
     if (!upstreamRes.ok) {
       if (upstreamRes.status === 401 || upstreamRes.status === 403) {
-        return jsonResponse({ error: '上游 AI 服务鉴权失败，请检查服务端 AGNES_API_KEY 配置' }, 502);
+        return jsonResponse({ error: '服务配置异常，请联系站长' }, 502);
       }
 
       let errorMessage = `AI 服务响应异常 (${upstreamRes.status})`;
@@ -91,7 +91,14 @@ export async function onRequest(context) {
         const parsedErr = JSON.parse(responseText);
         const msg = parsedErr?.error?.message || parsedErr?.error || parsedErr?.message;
         if (typeof msg === 'string' && msg.trim()) {
-          errorMessage = msg.trim();
+          errorMessage = msg
+            .trim()
+            .replace(/\bsk-[a-z0-9_*-]*(?:\.+[a-z0-9_*-]+)*/gi, '[已隐去]')
+            .replace(/\bBearer\s+[a-z0-9._~+/=-]+/gi, 'Bearer [已隐去]')
+            .replace(/\bAGNES_[A-Z0-9_]+\b/g, '[已隐去]')
+            .replace(/((?:account|user|uid|tenant|org|member|customer)[_-]?\s*id[\s:=#]*|账号\s*(?:id)?[\s:：=#-]*|用户\s*id[\s:：=#-]*)(?=[a-z0-9_-]*\d)[a-z0-9_-]{4,}/gi, '$1[已隐去]')
+            .replace(/\d{6,}/g, '[已隐去]')
+            .slice(0, 120);
         }
       } catch {
         // Ignore non-JSON error body parsing failure
