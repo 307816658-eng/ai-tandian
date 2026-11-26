@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI 探店视频分镜与提示词工作台，即梦/豆包专用，支持餐饮门头识图、爆款编剧、角色与场景一致性锁定及 5 秒分镜提示词编译。" />
   <title>AI 探店视频分镜与提示词工作台（即梦 / 豆包专用）</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     html, body {
@@ -31,6 +33,35 @@
     .custom-scrollbar::-webkit-scrollbar-track {
       background: transparent;
     }
+    .back-portal-capsule {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 40;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(234, 88, 12, 0.22);
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+      color: #1e293b;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.2;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .back-portal-capsule:hover {
+      background: rgba(234, 88, 12, 0.94);
+      color: #ffffff;
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(234, 88, 12, 0.28);
+    }
     @media (max-width: 768px) {
       input[type="text"], textarea, select {
         font-size: 16px !important;
@@ -38,6 +69,15 @@
       #emptyState, #loadingState, #errorState {
         min-height: 280px;
         padding: 2rem 1.25rem;
+      }
+      footer {
+        padding-bottom: 64px;
+      }
+      .back-portal-capsule {
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        padding: 7px 12px;
+        font-size: 12px;
       }
     }
     @media (max-width: 480px) {
@@ -88,7 +128,7 @@
       #toastContainer {
         left: 12px !important;
         right: 12px !important;
-        bottom: 16px !important;
+        bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
         transform: none !important;
       }
     }
@@ -146,7 +186,7 @@
               <p class="text-xs text-slate-400">AI 自动解析店名、招牌特色、烟火气档次与主营风味</p>
             </div>
             <div id="imagePreviewBox" class="hidden relative">
-              <img id="imagePreview" src="" alt="门头预览" class="max-h-52 mx-auto rounded-lg shadow-sm object-contain" />
+              <img id="imagePreview" alt="门头预览" class="max-h-52 mx-auto rounded-lg shadow-sm object-contain" />
               <button type="button" onclick="clearImage(event)" class="mt-2.5 text-xs text-red-600 hover:text-red-700 font-medium underline">
                 ✕ 移除并更换照片
               </button>
@@ -339,7 +379,7 @@
               </h3>
               <p class="text-xs text-slate-500 mt-0.5">每镜固定 5 秒，已注入外貌、菜品特写与物理运镜指令，按卡片提示上传参考图即可</p>
             </div>
-            <button type="button" onclick="copyAllShots(this)" class="text-xs px-3.5 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 rounded-lg font-bold transition shadow-sm">
+            <button type="button" onclick="copyAllShots(this, event)" class="text-xs px-3.5 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 rounded-lg font-bold transition shadow-sm">
               📋 一键复制全部分镜提示词
             </button>
           </div>
@@ -375,22 +415,81 @@
     <p>AI 探店视频分镜与提示词工作台 · 专为即梦AI / 豆包视频（Seedance 模型）深度定制</p>
   </footer>
 
-  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+  <a class="back-portal-capsule" href="https://aweiblog.asia/" target="_blank" rel="noopener noreferrer">← 返回阿伟主站</a>
+
+  <div id="toastContainer" class="fixed bottom-16 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <script>
     // 后台内置全自动 API 配置（不向前端暴露配置面板，完全后台运营）
     const INTERNAL_CONFIG = {
-      baseUrl: 'https://apihub.agnes-ai.com/v1',
-      model: 'agnes-3.0-flash',
-      apiKey: 'sk-mQgzP8flI4DXC1F5aRNTKCfcw6ItZXvjPNlKkPdEO0Rf1NP9'
+      endpoint: '/api/ai',
+      model: 'agnes-3.0-flash'
     };
 
     let uploadedImageBase64 = null;
     let currentGeneratedData = null;
 
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      if (!container || !message) return;
+      const toast = document.createElement('div');
+      const toneClass = type === 'error'
+        ? 'bg-red-600 text-white border border-red-500'
+        : type === 'info'
+          ? 'bg-amber-600 text-white border border-amber-500'
+          : 'bg-slate-900/95 text-white border border-slate-700';
+      const icon = type === 'error' ? '⚠️' : type === 'info' ? '💡' : '✅';
+      toast.className = `${toneClass} px-3.5 py-2.5 rounded-xl shadow-lg text-xs sm:text-sm font-medium flex items-center gap-2 transition-all duration-300 opacity-0 translate-y-2`;
+      toast.innerHTML = `<span>${icon}</span><span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+      });
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 2600);
+    }
+
+    function showFormError(message) {
+      const banner = document.getElementById('formErrorBanner');
+      if (!banner) return;
+      banner.textContent = message;
+      banner.classList.remove('hidden');
+    }
+
+    function clearFormError() {
+      const banner = document.getElementById('formErrorBanner');
+      if (!banner) return;
+      banner.textContent = '';
+      banner.classList.add('hidden');
+    }
+
+    function showErrorState(message) {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('resultContainer').classList.add('hidden');
+      const errorMsgEl = document.getElementById('errorMessageText');
+      if (errorMsgEl) {
+        errorMsgEl.textContent = message || '生成服务暂时遇到波动，请稍后重试。';
+      }
+      document.getElementById('errorState').classList.remove('hidden');
+    }
+
+    document.getElementById('storeText')?.addEventListener('input', clearFormError);
+
     // 处理门头图片上传并压缩至 1024px
     function handleImageUpload(event) {
-      const file = event.target.files[0];
+      const file = event?.target?.files?.[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -417,6 +516,11 @@
           document.getElementById('imagePreview').src = uploadedImageBase64;
           document.getElementById('uploadPlaceholder').classList.add('hidden');
           document.getElementById('imagePreviewBox').classList.remove('hidden');
+          clearFormError();
+          showToast('门头照片已就绪，点击下方即可生成分镜', 'success');
+        };
+        img.onerror = function() {
+          showToast('图片解析失败，请更换其他照片重试', 'error');
         };
         img.src = e.target.result;
       };
@@ -427,6 +531,8 @@
       if (e) e.stopPropagation();
       uploadedImageBase64 = null;
       document.getElementById('imageInput').value = '';
+      const preview = document.getElementById('imagePreview');
+      if (preview) preview.removeAttribute('src');
       document.getElementById('uploadPlaceholder').classList.remove('hidden');
       document.getElementById('imagePreviewBox').classList.add('hidden');
     }
@@ -495,8 +601,8 @@
       // 第一轮尝试：直接解析
       try {
         return JSON.parse(cleaned);
-      } catch (err1) {
-        console.warn('初次 JSON 解析失败，启动智能容错修复流程...', err1.message);
+      } catch {
+        // 启动容错修复流程
       }
 
       // 第二轮修复：清理尾部悬空逗号 (如 {"a": 1, })
@@ -513,8 +619,8 @@
 
       try {
         return JSON.parse(repaired);
-      } catch (err2) {
-        console.warn('括号修复后解析失败，启动深度引号修复...', err2.message);
+      } catch {
+        // 启动深度引号修复
       }
 
       // 第四轮修复：智能转义值内部未转义的双引号
@@ -524,8 +630,7 @@
           return `: "${sanitized}"`;
         });
         return JSON.parse(fixedQuotes);
-      } catch (err3) {
-        console.error('所有自动修复策略均未成功:', err3);
+      } catch {
         throw new Error('分镜方案数据结构解析遇到波动，已自动为您保留输入，请再点一次生成即可。');
       }
     }
@@ -540,16 +645,23 @@
       const industry = document.getElementById('industryType').value;
 
       if (!uploadedImageBase64 && !storeText) {
-        alert('请至少上传一张餐饮门头照，或在输入框填写店名描述！');
+        showFormError('请至少上传一张餐饮门头照，或在输入框填写店名描述！');
+        document.getElementById('storeText')?.focus();
         return;
       }
+      clearFormError();
 
       // 切换加载中
       document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('errorState').classList.add('hidden');
       document.getElementById('resultContainer').classList.add('hidden');
       document.getElementById('loadingState').classList.remove('hidden');
       document.getElementById('generateBtn').disabled = true;
       document.getElementById('generateBtn').classList.add('opacity-60');
+      const generateBtnText = document.getElementById('generateBtnText');
+      if (generateBtnText) {
+        generateBtnText.textContent = '⏳ 正在识图并编译分镜全案...';
+      }
 
       const systemPrompt = buildSystemPrompt(duration, shotCount, style, persona, industry);
       const userText = `请为这家餐饮门店生成 ${duration} 秒（共 ${shotCount} 镜，每镜严格5秒）的 AI 探店视频分镜提示词全案。
@@ -567,11 +679,10 @@
       }
 
       try {
-        const response = await fetch(`${INTERNAL_CONFIG.baseUrl}/chat/completions`, {
+        const response = await fetch(INTERNAL_CONFIG.endpoint, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${INTERNAL_CONFIG.apiKey}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             model: INTERNAL_CONFIG.model,
@@ -587,29 +698,58 @@
 
         if (!response.ok) {
           const errText = await response.text();
-          throw new Error(`AI 服务响应异常 (${response.status}): ${errText}`);
+          let errMsg = `AI 服务响应异常 (${response.status})`;
+          try {
+            const errJson = JSON.parse(errText);
+            const parsedMsg = errJson?.error?.message || errJson?.error || errJson?.message;
+            if (typeof parsedMsg === 'string' && parsedMsg.trim()) {
+              errMsg = parsedMsg.trim();
+            }
+          } catch {
+            if (errText && errText.trim().length > 0 && errText.trim().length < 200) {
+              errMsg = `${errMsg}: ${errText.trim()}`;
+            }
+          }
+          throw new Error(errMsg);
         }
 
-        const data = await response.json();
-        const rawContent = data.choices[0].message.content;
+        let data;
+        try {
+          data = await response.json();
+        } catch {
+          throw new Error('AI 服务返回数据格式异常，请稍后重试。');
+        }
+
+        const rawContent = data?.choices?.[0]?.message?.content;
+        if (!rawContent || typeof rawContent !== 'string') {
+          const apiErr = data?.error?.message || data?.error;
+          throw new Error(typeof apiErr === 'string' && apiErr.trim() ? apiErr.trim() : 'AI 未返回有效分镜内容，请再试一次。');
+        }
+
         const parsed = safeJsonParse(rawContent);
 
         renderResult(parsed, duration, shotCount);
+        showToast('餐饮探店分镜全案已生成！', 'success');
       } catch (err) {
-        console.error('生成异常详情:', err);
-        alert('生成提示：' + err.message + '\n\n系统已保留您当前填写的信息，请直接再次点击生成即可！');
-        document.getElementById('loadingState').classList.add('hidden');
-        document.getElementById('emptyState').classList.remove('hidden');
+        showErrorState(err?.message || '生成服务暂时异常，请直接再次点击重新生成。');
       } finally {
         document.getElementById('generateBtn').disabled = false;
         document.getElementById('generateBtn').classList.remove('opacity-60');
+        if (generateBtnText) {
+          generateBtnText.textContent = '🚀 一键生成餐饮探店提示词与分镜全案';
+        }
       }
     }
 
     function renderResult(data, duration, shotCount) {
+      if (!data || typeof data !== 'object' || !Array.isArray(data.shots) || data.shots.length === 0) {
+        throw new Error('分镜方案数据结构不完整，请再点一次重新生成。');
+      }
+
       currentGeneratedData = data;
       document.getElementById('loadingState').classList.add('hidden');
       document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('errorState').classList.add('hidden');
       document.getElementById('resultContainer').classList.remove('hidden');
 
       document.getElementById('resTitle').textContent = data.store_title || 'AI 餐饮探店分镜执行全案';
@@ -623,29 +763,35 @@
       let allVoiceovers = [];
 
       data.shots.forEach((shot, index) => {
-        allVoiceovers.push(`【镜${shot.shot_num} | ${shot.time_range}】${shot.voiceover}`);
+        const shotNum = shot?.shot_num ?? (index + 1);
+        const timeRange = shot?.time_range || '';
+        const refType = shot?.ref_type || '参考图建议';
+        const voiceover = shot?.voiceover || '';
+        const cameraMove = shot?.camera_move || '';
+        const promptText = shot?.video_prompt || shot?.prompt || shot?.description || '';
+
+        allVoiceovers.push(`【镜${shotNum} | ${timeRange}】${voiceover}`);
         const badgeColor = index === 0 ? 'bg-orange-100 text-orange-900 border-orange-300' : 'bg-blue-50 text-blue-700 border-blue-200';
-        const promptText = shot.video_prompt || shot.prompt || shot.description || '';
 
         const card = document.createElement('div');
         card.className = 'rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-2.5 hover:border-orange-400 transition';
         card.innerHTML = `
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2">
-              <span class="px-2.5 py-0.5 rounded-md bg-slate-900 text-white text-xs font-bold">镜 ${shot.shot_num}</span>
-              <span class="text-xs font-mono font-bold text-slate-700">${shot.time_range}</span>
-              <span class="text-xs px-2 py-0.5 rounded border ${badgeColor} font-semibold">${shot.ref_type}</span>
+              <span class="px-2.5 py-0.5 rounded-md bg-slate-900 text-white text-xs font-bold">镜 ${escapeHtml(shotNum)}</span>
+              <span class="text-xs font-mono font-bold text-slate-700">${escapeHtml(timeRange)}</span>
+              <span class="text-xs px-2 py-0.5 rounded border ${badgeColor} font-semibold">${escapeHtml(refType)}</span>
             </div>
-            <button onclick="copyDirectText(this, ${index})" class="text-xs px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium shadow-sm transition">
+            <button type="button" onclick="copyDirectText(this, ${index})" class="text-xs px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium shadow-sm transition">
               一键复制视频提示词
             </button>
           </div>
           <div class="text-xs text-slate-700 bg-white px-3 py-2 rounded-lg border border-slate-200/80">
-            <span class="font-bold text-slate-900">🎙️ 口播台词：</span>“${shot.voiceover}”
-            <span class="ml-2 text-orange-600 font-medium">(${shot.camera_move})</span>
+            <span class="font-bold text-slate-900">🎙️ 口播台词：</span>“${escapeHtml(voiceover)}”
+            <span class="ml-2 text-orange-600 font-medium">(${escapeHtml(cameraMove)})</span>
           </div>
           <div class="text-xs text-slate-800 leading-relaxed font-mono bg-white p-3 rounded-lg border border-slate-200 select-all">
-            ${promptText}
+            ${escapeHtml(promptText)}
           </div>
         `;
         shotsContainer.appendChild(card);
@@ -665,13 +811,14 @@
       try {
         document.execCommand('copy');
         showCopiedFeedback(btnElement);
-      } catch (err) {
-        alert('复制失败，请手动选中文本复制');
+      } catch {
+        showToast('复制失败，请手动选中文本复制', 'error');
       }
       document.body.removeChild(textarea);
     }
 
     function showCopiedFeedback(btn) {
+      showToast('已复制到剪贴板', 'success');
       if (!btn) return;
       const originalText = btn.textContent;
       btn.textContent = '✅ 已复制';
@@ -690,7 +837,7 @@
     }
 
     function copyDirectText(btn, shotIndex) {
-      if (!currentGeneratedData || !currentGeneratedData.shots[shotIndex]) return;
+      if (!currentGeneratedData || !Array.isArray(currentGeneratedData.shots) || !currentGeneratedData.shots[shotIndex]) return;
       const shot = currentGeneratedData.shots[shotIndex];
       const text = shot.video_prompt || shot.prompt || shot.description || '';
       if (navigator.clipboard && window.isSecureContext) {
@@ -700,13 +847,13 @@
       }
     }
 
-    function copyAllShots(btn) {
-      if (!currentGeneratedData) return;
+    function copyAllShots(btn, e) {
+      if (!currentGeneratedData || !Array.isArray(currentGeneratedData.shots)) return;
       const allText = currentGeneratedData.shots.map(s => {
-        const p = s.video_prompt || s.prompt || s.description || '';
-        return `【分镜 ${s.shot_num} | ${s.time_range} | ${s.ref_type}】\n运镜与动作：${s.camera_move}\n口播台词：${s.voiceover}\nSeedance提示词：${p}`;
+        const p = s?.video_prompt || s?.prompt || s?.description || '';
+        return `【分镜 ${s?.shot_num ?? ''} | ${s?.time_range || ''} | ${s?.ref_type || ''}】\n运镜与动作：${s?.camera_move || ''}\n口播台词：${s?.voiceover || ''}\nSeedance提示词：${p}`;
       }).join('\n\n');
-      const targetBtn = btn || (window.event ? window.event.target : null);
+      const targetBtn = btn || e?.currentTarget || e?.target || null;
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(allText).then(() => showCopiedFeedback(targetBtn)).catch(() => fallbackCopy(allText, targetBtn));
       } else {
@@ -716,24 +863,24 @@
 
     // 导出完整分镜 TXT 脚本
     function downloadScriptFile() {
-      if (!currentGeneratedData) return;
+      if (!currentGeneratedData || !Array.isArray(currentGeneratedData.shots)) return;
       let content = `=================================================\n`;
-      content += `${currentGeneratedData.store_title}\n`;
-      content += `策略摘要：${currentGeneratedData.store_analysis}\n`;
+      content += `${currentGeneratedData.store_title || ''}\n`;
+      content += `策略摘要：${currentGeneratedData.store_analysis || ''}\n`;
       content += `=================================================\n\n`;
       content += `【第一步：一致性参考底图提示词】\n\n`;
-      content += `1. 达人白底定妆照：\n${currentGeneratedData.character_prompt}\n\n`;
-      content += `2. 店内主场景空镜图：\n${currentGeneratedData.scene_prompt}\n\n`;
+      content += `1. 达人白底定妆照：\n${currentGeneratedData.character_prompt || ''}\n\n`;
+      content += `2. 店内主场景空镜图：\n${currentGeneratedData.scene_prompt || ''}\n\n`;
       content += `=================================================\n`;
       content += `【第二步：即梦 / 豆包 Seedance 分镜提示词】\n\n`;
       currentGeneratedData.shots.forEach(s => {
-        const p = s.video_prompt || s.prompt || s.description || '';
-        content += `【镜${s.shot_num} | ${s.time_range}】\n参考图建议：${s.ref_type}\n运镜：${s.camera_move}\n口播台词：${s.voiceover}\n画面提示词：${p}\n\n`;
+        const p = s?.video_prompt || s?.prompt || s?.description || '';
+        content += `【镜${s?.shot_num ?? ''} | ${s?.time_range || ''}】\n参考图建议：${s?.ref_type || ''}\n运镜：${s?.camera_move || ''}\n口播台词：${s?.voiceover || ''}\n画面提示词：${p}\n\n`;
       });
       content += `=================================================\n`;
       content += `【第三步：剪映纯享版口播配音台词】\n\n`;
       currentGeneratedData.shots.forEach(s => {
-        content += `${s.voiceover}\n`;
+        content += `${s?.voiceover || ''}\n`;
       });
 
       const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
@@ -743,10 +890,12 @@
       a.download = `AI餐饮探店分镜脚本_${(currentGeneratedData.store_title || '导出').slice(0, 16)}.txt`;
       a.click();
       URL.revokeObjectURL(url);
+      showToast('已导出完整分镜 TXT 脚本', 'success');
     }
 
     // 免消耗演示模式（纯餐饮·老潼关肉夹馍标准案例）
     function loadDemoResult() {
+      clearFormError();
       const demoData = {
         store_title: "【演示案例】老潼关手工肉夹馍·老陕正宗红油凉皮老店（30秒餐饮爆款）",
         store_analysis: "特色地方快餐老店，烟火气十足。采用「巷子深名店反差钩子 + 现切千层掉渣爆汁特写 + 19.9超值双人餐福利收口」的抖音本地生活黄金转化闭环。",
@@ -804,6 +953,7 @@
         ]
       };
       renderResult(demoData, 30, 6);
+      showToast('已载入「老潼关肉夹馍」演示案例', 'info');
     }
   </script>
 </body>
