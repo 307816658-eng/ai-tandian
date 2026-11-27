@@ -461,7 +461,7 @@
           onclick="loadDemoResult()"
           class="btn-interactive btn-soft-amber w-full sm:w-auto text-xs sm:text-[13px] px-3.5 py-2 rounded-xl font-semibold flex items-center justify-center gap-1.5"
         >
-          <span>⚡</span>
+          <span class="shrink-0"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg></span>
           <span>免消耗演示模式（老潼关肉夹馍）</span>
         </button>
       </div>
@@ -620,7 +620,7 @@
           onclick="generatePrompts()"
           class="btn-interactive btn-primary w-full py-3.5 px-4 font-bold rounded-xl flex items-center justify-center gap-2 text-[15px]"
         >
-          <span id="generateBtnIcon">🎬</span>
+          <span id="generateBtnIcon"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2" /><path d="M4 16v2a2 2 0 0 0 2 2h2" /><path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2a2 2 0 0 1 2-2v-2" /><polygon points="10 8.5 16 12 10 15.5 10 8.5" fill="currentColor" stroke="none" /></svg></span>
           <span id="generateBtnText">一键生成探店分镜与提示词全案</span>
         </button>
       </div>
@@ -664,7 +664,7 @@
             onclick="loadDemoResult()"
             class="btn-interactive btn-soft-amber text-xs sm:text-sm px-4 py-2.5 rounded-xl font-semibold inline-flex items-center gap-1.5"
           >
-            <span>⚡</span>
+            <span class="shrink-0"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg></span>
             <span>立即体验「老潼关肉夹馍」完整演示案例</span>
           </button>
         </div>
@@ -728,7 +728,7 @@
             onclick="generatePrompts()"
             class="btn-interactive btn-primary w-full sm:w-auto px-6 py-2.5 text-sm font-bold rounded-xl inline-flex items-center justify-center gap-1.5"
           >
-            <span>🔄</span>
+            <span class="shrink-0"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36" /><polyline points="21 3 21 9 15 9" /></svg></span>
             <span>重试生成</span>
           </button>
           <button
@@ -736,7 +736,7 @@
             onclick="loadDemoResult()"
             class="btn-interactive btn-soft-amber w-full sm:w-auto px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl inline-flex items-center justify-center gap-1.5"
           >
-            <span>⚡</span>
+            <span class="shrink-0"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg></span>
             <span>先看演示案例</span>
           </button>
         </div>
@@ -803,7 +803,7 @@
               onclick="copyAllShots(this, event)"
               class="btn-interactive btn-soft-amber w-full sm:w-auto shrink-0 text-xs px-3.5 py-2 rounded-xl font-semibold inline-flex items-center justify-center gap-1.5"
             >
-              <span>📋</span>
+              <span class="shrink-0"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4V2h6v2" /><path d="M9 10h6M9 14h6M9 18h4" /></svg></span>
               <span>一键复制全部分镜提示词</span>
             </button>
           </div>
@@ -822,11 +822,11 @@
             </div>
             <div class="flex flex-wrap items-center gap-2 shrink-0">
               <button type="button" onclick="downloadScriptFile()" class="btn-interactive btn-ghost text-xs px-3 py-2 rounded-xl font-medium inline-flex items-center gap-1.5">
-                <span>💾</span>
+                <span class="shrink-0"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12" /><polyline points="7 10 12 15 17 10" /><path d="M4 19h16" /></svg></span>
                 <span>导出 TXT 脚本</span>
               </button>
               <button type="button" onclick="copyText('fullVoiceoverText', this)" class="btn-interactive btn-dark text-xs px-3.5 py-2 rounded-xl font-medium inline-flex items-center gap-1.5">
-                <span>🎙️</span>
+                <span class="shrink-0"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0" /><path d="M12 17v4" /></svg></span>
                 <span>复制纯台词</span>
               </button>
             </div>
@@ -1051,7 +1051,7 @@
         : type === 'info'
           ? 'background: #9a6324; color: #ffffff; border: 1px solid #82531d;'
           : 'background: #292521; color: #faf8f5; border: 1px solid #1f1c18;';
-      const icon = type === 'error' ? '⚠️' : type === 'info' ? '💡' : '✅';
+      const icon = type === 'error' ? ICONS.warn : type === 'info' ? ICONS.info : ICONS.check;
       toast.setAttribute('style', toneStyle);
       toast.className = 'px-3.5 py-2.5 rounded-xl shadow-lg text-xs sm:text-sm font-medium flex items-center gap-2 transition-all duration-300 opacity-0 translate-y-2';
       toast.innerHTML = `<span>${icon}</span><span>${escapeHtml(message)}</span>`;
@@ -1389,7 +1389,7 @@
       const generateBtnText = document.getElementById('generateBtnText');
       const generateBtnIcon = document.getElementById('generateBtnIcon');
       if (generateBtn) generateBtn.disabled = true;
-      if (generateBtnIcon) generateBtnIcon.textContent = '⏳';
+      if (generateBtnIcon) generateBtnIcon.innerHTML = ICONS.reload;
       if (generateBtnText) generateBtnText.textContent = '正在识图并编译分镜全案…';
 
       startLoadingAnimation();
@@ -1473,7 +1473,7 @@
         stopLoadingAnimation();
         isGenerating = false;
         if (generateBtn) generateBtn.disabled = false;
-        if (generateBtnIcon) generateBtnIcon.textContent = '🎬';
+        if (generateBtnIcon) generateBtnIcon.innerHTML = ICONS.clapper;
         if (generateBtnText) generateBtnText.textContent = '一键生成探店分镜与提示词全案';
       }
     }
@@ -1529,7 +1529,7 @@
             </button>
           </div>
           <div class="text-xs bg-white px-3 py-2.5 rounded-xl border border-[#eae5dc] leading-relaxed" style="color: var(--ink-secondary);">
-            <span class="font-semibold" style="color: var(--ink-primary);">🎙️ 口播台词：</span>“${escapeHtml(voiceover)}”
+            <span class="font-semibold" style="color: var(--ink-primary);">口播台词：</span>“${escapeHtml(voiceover)}”
             ${cameraMove ? `<span class="inline-block ml-1.5 font-medium" style="color: var(--accent);">(${escapeHtml(cameraMove)})</span>` : ''}
           </div>
           <div class="text-xs leading-relaxed font-mono bg-white p-3 rounded-xl border border-[#eae5dc] select-all" style="color: var(--ink-primary);">
@@ -1563,7 +1563,7 @@
       showToast('已复制到剪贴板', 'success');
       if (!btn) return;
       const originalHtml = btn.innerHTML;
-      btn.textContent = '✅ 已复制';
+      btn.textContent = '✓ 已复制';
       setTimeout(() => {
         btn.innerHTML = originalHtml;
       }, 1500);
