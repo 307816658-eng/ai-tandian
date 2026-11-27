@@ -2,37 +2,368 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="AI 探店视频分镜与提示词工作台，即梦/豆包专用，支持餐饮门头识图、爆款编剧、角色与场景一致性锁定及 5 秒分镜提示词编译。" />
   <title>AI 探店视频分镜与提示词工作台（即梦 / 豆包专用）</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    :root {
+      --bg-canvas: #f6f4f0;
+      --bg-surface: #ffffff;
+      --bg-subtle: #faf8f5;
+      --bg-inset: #f4f1ec;
+      --border-soft: #e7e2da;
+      --border-strong: #d6cfc4;
+      --ink-primary: #1f1c18;
+      --ink-secondary: #4a453e;
+      --ink-muted: #7c756c;
+      --ink-faint: #a39c93;
+      --accent: #c85a32;
+      --accent-hover: #b34b26;
+      --accent-active: #9a3d1d;
+      --accent-soft: #fbf2ed;
+      --accent-border: #efd7cb;
+      --sage: #2e6f5e;
+      --sage-soft: #eef6f3;
+      --sage-border: #cde3dc;
+      --amber: #9a6324;
+      --amber-soft: #faf4e8;
+      --amber-border: #ecddc0;
+      --danger: #b9382c;
+      --danger-soft: #fdf3f2;
+      --danger-border: #f2cfcb;
+      --shadow-card: 0 1px 2px rgba(31, 28, 24, 0.04), 0 8px 24px -6px rgba(31, 28, 24, 0.05);
+      --shadow-hover: 0 4px 12px rgba(31, 28, 24, 0.06), 0 14px 30px -8px rgba(200, 90, 50, 0.14);
+      --shadow-primary: 0 8px 20px -4px rgba(200, 90, 50, 0.30);
+      --shadow-float: 0 6px 22px rgba(31, 28, 24, 0.10), 0 1px 3px rgba(31, 28, 24, 0.06);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
     html, body {
       overflow-x: clip;
       max-width: 100%;
+      margin: 0;
+      padding: 0;
     }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+      background-color: var(--bg-canvas);
+      background-image:
+        radial-gradient(ellipse 80% 45% at 15% -5%, rgba(200, 90, 50, 0.065), transparent 65%),
+        radial-gradient(ellipse 60% 40% at 88% 0%, rgba(46, 111, 94, 0.045), transparent 60%);
+      color: var(--ink-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-feature-settings: "tnum";
     }
-    main > section {
+
+    main, main > section, .surface-card, .surface-subcard {
       min-width: 0;
+      max-width: 100%;
     }
-    #charPromptText, #scenePromptText, #fullVoiceoverText, #shotsList, #resTitle, #resAnalysis {
+    @media (max-width: 1023px) {
+      main {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+    }
+
+    /* 三级字体规范 */
+    .type-h1 {
+      font-size: 1rem;
+      line-height: 1.35;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--ink-primary);
+    }
+    .type-h2 {
+      font-size: 0.9375rem;
+      line-height: 1.4;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--ink-primary);
+    }
+    .type-body {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      color: var(--ink-secondary);
+    }
+    .type-meta {
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: var(--ink-muted);
+    }
+
+    @media (min-width: 640px) {
+      .type-h1 {
+        font-size: 1.2rem;
+      }
+      .type-h2 {
+        font-size: 1rem;
+      }
+    }
+
+    /* 统一卡片与阴影层级 */
+    .surface-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-soft);
+      border-radius: 18px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .surface-subcard {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-soft);
+      border-radius: 14px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    .surface-subcard:hover {
+      border-color: var(--accent-border);
+      background: #ffffff;
+      box-shadow: 0 4px 16px -4px rgba(31, 28, 24, 0.06);
+    }
+
+    /* 表单输入统一质感 */
+    .studio-input {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      color: var(--ink-primary);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+    }
+    select.studio-input {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .studio-input::placeholder {
+      color: var(--ink-faint);
+    }
+    .studio-input:hover {
+      border-color: var(--border-strong);
+      background: #fdfcfb;
+    }
+    .studio-input:focus {
+      outline: none;
+      background: #ffffff;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(200, 90, 50, 0.12);
+    }
+
+    /* 统一按钮弹性交互（hover / :active 物理触感） */
+    .btn-interactive {
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition:
+        transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.2s ease,
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        opacity 0.18s ease;
+    }
+    .btn-interactive:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+    .btn-interactive:active:not(:disabled) {
+      transform: translateY(0) scale(0.972);
+    }
+    .btn-interactive:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .btn-interactive:disabled {
+      cursor: not-allowed;
+      opacity: 0.65;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #d1643b 0%, #b84c27 100%);
+      color: #ffffff;
+      border: 1px solid rgba(154, 61, 29, 0.35);
+      box-shadow: var(--shadow-primary);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #c4582f 0%, #a5421f 100%);
+      box-shadow: 0 10px 26px -4px rgba(200, 90, 50, 0.38);
+    }
+    .btn-primary:active:not(:disabled) {
+      background: linear-gradient(135deg, #ab4924 0%, #8f3718 100%);
+      box-shadow: 0 4px 12px -2px rgba(200, 90, 50, 0.28);
+    }
+
+    .btn-soft-amber {
+      background: var(--amber-soft);
+      color: var(--amber);
+      border: 1px solid var(--amber-border);
+    }
+    .btn-soft-amber:hover:not(:disabled) {
+      background: #f4ebd8;
+      border-color: #dec79e;
+      box-shadow: 0 4px 12px -4px rgba(154, 99, 36, 0.16);
+    }
+    .btn-soft-amber:active:not(:disabled) {
+      background: #ece0c7;
+    }
+
+    .btn-ghost {
+      background: #ffffff;
+      color: var(--ink-secondary);
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 1px 2px rgba(31, 28, 24, 0.04);
+    }
+    .btn-ghost:hover:not(:disabled) {
+      background: var(--bg-subtle);
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+    .btn-ghost:active:not(:disabled) {
+      background: var(--accent-soft);
+    }
+
+    .btn-dark {
+      background: #292521;
+      color: #faf8f5;
+      border: 1px solid #1f1c18;
+      box-shadow: 0 3px 10px -2px rgba(31, 28, 24, 0.22);
+    }
+    .btn-dark:hover:not(:disabled) {
+      background: #1c1916;
+      box-shadow: 0 6px 14px -3px rgba(31, 28, 24, 0.28);
+    }
+    .btn-dark:active:not(:disabled) {
+      background: #12100e;
+    }
+
+    /* 时长选择卡片 */
+    .duration-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      color: var(--ink-secondary);
+      transition: transform 0.16s ease, border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .duration-card:hover {
+      border-color: var(--border-strong);
+      background: #ffffff;
+    }
+    .duration-card:active {
+      transform: scale(0.97);
+    }
+    input[name="duration"]:checked + .duration-card {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent-active);
+      box-shadow: 0 0 0 1px rgba(200, 90, 50, 0.25), 0 4px 12px -4px rgba(200, 90, 50, 0.18);
+    }
+
+    /* 拖拽上传区态 */
+    .drop-zone-idle {
+      background: var(--bg-subtle);
+      border: 1.5px dashed var(--border-strong);
+      border-radius: 14px;
+      transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
+    }
+    .drop-zone-idle:hover {
+      border-color: var(--accent);
+      background: rgba(251, 242, 237, 0.55);
+    }
+    .drop-zone-idle:active {
+      transform: scale(0.99);
+    }
+    .drop-zone-active {
+      border-color: var(--accent) !important;
+      background: var(--accent-soft) !important;
+      box-shadow: 0 0 0 4px rgba(200, 90, 50, 0.10);
+    }
+
+    /* 防止长文案撑破移动端 */
+    #charPromptText, #scenePromptText, #fullVoiceoverText, #shotsList, #resTitle, #resAnalysis, #errorMessageText, #errorDetailText {
       overflow-wrap: anywhere;
       word-break: break-word;
+      min-width: 0;
     }
+
     .custom-scrollbar::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
+      background: #d6cfc4;
       border-radius: 3px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
       background: transparent;
     }
+
+    /* 顶部玻璃导航 */
+    .glass-header {
+      background: rgba(255, 254, 252, 0.86);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(231, 226, 218, 0.9);
+    }
+
+    /* 诊断头部暖调高级渐变卡 */
+    .strategy-banner {
+      background: linear-gradient(135deg, #3c312b 0%, #5c3c2e 55%, #a84e2b 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      box-shadow: 0 10px 28px -8px rgba(60, 49, 43, 0.35);
+    }
+
+    /* Loading 电影取景器动画 */
+    @keyframes lensPulse {
+      0%, 100% {
+        transform: scale(0.96);
+        opacity: 0.45;
+      }
+      50% {
+        transform: scale(1.08);
+        opacity: 0.9;
+      }
+    }
+    @keyframes orbitSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    @keyframes progressSweep {
+      0% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(260%);
+      }
+    }
+    .loading-ring-outer {
+      animation: lensPulse 2.4s ease-in-out infinite;
+    }
+    .loading-arc {
+      animation: orbitSpin 1.15s linear infinite;
+    }
+    .loading-sweep {
+      animation: progressSweep 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    .loading-text-fade {
+      transition: opacity 0.26s ease, transform 0.26s ease;
+    }
+    .loading-text-fade.is-swapping {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+
+    /* 返回主站胶囊（低饱和暖调玻璃拟态融合） */
     .back-portal-capsule {
       position: fixed;
       right: 20px;
@@ -43,203 +374,215 @@
       gap: 6px;
       padding: 8px 14px;
       border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.86);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(234, 88, 12, 0.22);
-      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
-      color: #1e293b;
+      background: rgba(255, 253, 250, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(200, 90, 50, 0.22);
+      box-shadow: var(--shadow-float);
+      color: var(--ink-primary);
       font-size: 13px;
       font-weight: 600;
       line-height: 1.2;
       text-decoration: none;
-      transition: all 0.2s ease;
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     }
     .back-portal-capsule:hover {
-      background: rgba(234, 88, 12, 0.94);
+      background: var(--accent);
       color: #ffffff;
-      border-color: transparent;
+      border-color: var(--accent);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(234, 88, 12, 0.28);
+      box-shadow: 0 8px 22px -4px rgba(200, 90, 50, 0.34);
     }
+    .back-portal-capsule:active {
+      transform: translateY(0) scale(0.965);
+      background: var(--accent-active);
+    }
+
     @media (max-width: 768px) {
       input[type="text"], textarea, select {
         font-size: 16px !important;
       }
       #emptyState, #loadingState, #errorState {
-        min-height: 280px;
+        min-height: 300px;
         padding: 2rem 1.25rem;
       }
       footer {
-        padding-bottom: 64px;
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
       }
       .back-portal-capsule {
-        right: 12px;
-        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        right: 14px;
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
         padding: 7px 12px;
         font-size: 12px;
       }
     }
+
     @media (max-width: 480px) {
-      header > div {
-        height: auto !important;
-        min-height: 3.75rem;
-        padding-top: 0.625rem;
-        padding-bottom: 0.625rem;
-        flex-wrap: wrap;
-        gap: 0.625rem;
-      }
-      header h1 {
-        font-size: 0.98rem !important;
-      }
-      header .flex.items-center.gap-2 {
-        flex-wrap: wrap;
-      }
-      header .flex.items-center.gap-2 > span {
-        flex-shrink: 0;
-        font-size: 12px !important;
-      }
-      header > div > div:last-child,
-      header > div > div:last-child > button {
-        width: 100%;
-        justify-content: center;
-      }
-      main {
-        padding-top: 1rem !important;
-        padding-bottom: 1.25rem !important;
-        gap: 1rem !important;
-      }
-      main .bg-white.rounded-2xl {
-        padding: 1rem !important;
-      }
-      .text-\[11px\] {
-        font-size: 12px !important;
-        line-height: 1.35;
-      }
-      .grid.grid-cols-3 {
-        gap: 0.375rem !important;
-      }
-      .grid.grid-cols-3 label > div {
-        padding: 0.5rem 0.25rem !important;
+      #toastContainer {
+        left: 14px !important;
+        right: 14px !important;
+        bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
       }
       button {
-        min-height: 36px;
-      }
-      #toastContainer {
-        left: 12px !important;
-        right: 12px !important;
-        bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
-        transform: none !important;
+        min-height: 38px;
       }
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
-  <!-- 顶部导航栏（无任何 API Key 或模型配置入口，纯后台智能运营） -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
-          🍲
+<body class="min-h-screen flex flex-col">
+  <!-- 顶部导航栏（纯后台代理，无任何明文 Key 或模型配置入口） -->
+  <header class="glass-header sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-3.5 sm:px-6 py-2.5 sm:py-0 sm:h-[64px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 min-w-0">
+      <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl shrink-0 flex items-center justify-center shadow-sm" style="background: linear-gradient(135deg, #d86e41 0%, #b74a24 100%);">
+          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 8V6a2 2 0 0 1 2-2h2" />
+            <path d="M4 16v2a2 2 0 0 0 2 2h2" />
+            <path d="M16 4h2a2 2 0 0 1 2 2v2" />
+            <path d="M16 20h2a2 2 0 0 0 2-2v-2" />
+            <polygon points="10 8.5 16 12 10 15.5 10 8.5" fill="currentColor" stroke="none" />
+          </svg>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">AI 探店视频分镜与提示词工作台</h1>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+            <h1 class="type-h1 min-w-0">AI 探店视频分镜与提示词工作台</h1>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0" style="background: var(--sage-soft); color: var(--sage); border: 1px solid var(--sage-border);">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
               AI 视觉已就绪
             </span>
           </div>
-          <p class="text-xs text-slate-500">餐饮门头识图 → 爆款编剧 → 角色锚点锁定 → 即梦 / 豆包（Seedance）专用分镜</p>
+          <p class="type-meta truncate hidden sm:block">餐饮门头识图 → 爆款编剧 → 角色锚点锁定 → 即梦 / 豆包（Seedance）专用分镜</p>
         </div>
       </div>
-      <div class="flex items-center gap-2">
-        <button type="button" onclick="loadDemoResult()" class="text-xs sm:text-sm px-3.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 font-semibold transition flex items-center gap-1.5 shadow-sm">
-          <span>⚡ 免消耗演示模式（老潼关肉夹馍）</span>
+
+      <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+        <button
+          type="button"
+          onclick="loadDemoResult()"
+          class="btn-interactive btn-soft-amber w-full sm:w-auto text-xs sm:text-[13px] px-3.5 py-2 rounded-xl font-semibold flex items-center justify-center gap-1.5"
+        >
+          <span>⚡</span>
+          <span>免消耗演示模式（老潼关肉夹馍）</span>
         </button>
       </div>
     </div>
   </header>
 
   <!-- 主工作区：左右分栏 -->
-  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
+  <main class="max-w-7xl w-full mx-auto px-3.5 sm:px-6 py-4 sm:py-5 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
     <!-- 左侧：输入控制面板 (占5列) -->
-    <section class="lg:col-span-5 space-y-5">
-      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-5">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h2 class="font-bold text-slate-900 flex items-center gap-2 text-base">
-            <span class="w-6 h-6 rounded-full bg-orange-600 text-white text-xs flex items-center justify-center font-bold">1</span>
-            输入餐厅与门店信息
+    <section class="lg:col-span-5 lg:sticky lg:top-20 space-y-4">
+      <div class="surface-card p-4 sm:p-5 space-y-4">
+        <div class="flex items-center justify-between gap-2 pb-3 border-b border-[#efeae2]">
+          <h2 class="type-h2 flex items-center gap-2.5 min-w-0">
+            <span class="w-6 h-6 rounded-full text-white text-xs flex items-center justify-center font-bold shrink-0" style="background: var(--accent);">1</span>
+            <span>输入餐厅与门店信息</span>
           </h2>
-          <span class="text-xs text-slate-400">支持拍照识图或文字补充</span>
+          <span class="type-meta shrink-0">识图或文字补充</span>
         </div>
 
         <!-- 门头上传区 -->
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5">
-            上传餐厅门头照 <span class="text-orange-600 font-normal">（强烈推荐，AI 视觉识图识招牌）</span>
+          <label class="block text-sm font-semibold mb-1.5" style="color: var(--ink-primary);">
+            上传餐厅门头照
+            <span class="text-xs font-normal ml-1" style="color: var(--accent);">（推荐 · AI 自动识招牌）</span>
           </label>
-          <div id="dropZone" onclick="document.getElementById('imageInput').click()" class="border-2 border-dashed border-slate-300 hover:border-orange-500 rounded-xl p-4 text-center cursor-pointer transition bg-slate-50 hover:bg-orange-50/30 relative overflow-hidden group">
+          <div
+            id="dropZone"
+            role="button"
+            tabindex="0"
+            onclick="document.getElementById('imageInput').click()"
+            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('imageInput').click();}"
+            class="drop-zone-idle p-3.5 text-center cursor-pointer relative overflow-hidden group"
+          >
             <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)" />
-            <div id="uploadPlaceholder" class="py-5 space-y-2">
-              <div class="text-4xl group-hover:scale-110 transition transform">🏪</div>
-              <p class="text-sm font-semibold text-slate-700">点击上传或拖拽餐饮门头照片到此处</p>
-              <p class="text-xs text-slate-400">AI 自动解析店名、招牌特色、烟火气档次与主营风味</p>
+            <div id="uploadPlaceholder" class="py-3 sm:py-3.5 space-y-1.5">
+              <div class="w-11 h-11 mx-auto rounded-2xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105" style="background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border);">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 9l2-4h14l2 4" />
+                  <path d="M3 9v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9" />
+                  <path d="M9 20v-6a3 3 0 0 1 6 0v6" />
+                  <path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0" />
+                </svg>
+              </div>
+              <p class="text-sm font-semibold" style="color: var(--ink-primary);">点击上传或拖拽门头照片到此处</p>
+              <p class="type-meta">AI 自动解析店名、烟火气与主营风味</p>
             </div>
-            <div id="imagePreviewBox" class="hidden relative">
-              <img id="imagePreview" alt="门头预览" class="max-h-52 mx-auto rounded-lg shadow-sm object-contain" />
-              <button type="button" onclick="clearImage(event)" class="mt-2.5 text-xs text-red-600 hover:text-red-700 font-medium underline">
-                ✕ 移除并更换照片
-              </button>
+            <div id="imagePreviewBox" class="hidden space-y-2">
+              <img id="imagePreview" alt="门头预览" class="max-h-44 sm:max-h-48 mx-auto rounded-xl object-contain border border-[#e7e2da] shadow-sm bg-white" />
+              <div class="flex items-center justify-center gap-3">
+                <span class="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full" style="background: var(--sage-soft); color: var(--sage);">
+                  ✓ 门头图已压缩就绪
+                </span>
+                <button
+                  type="button"
+                  onclick="clearImage(event)"
+                  class="btn-interactive text-xs px-2.5 py-1 rounded-lg font-medium"
+                  style="color: var(--danger); background: var(--danger-soft); border: 1px solid var(--danger-border);"
+                >
+                  移除并更换
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- 文字补充门头 -->
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5">餐厅店名 / 特色风味描述</label>
-          <input id="storeText" type="text" placeholder="例如：老潼关手工肉夹馍·老陕正宗红油凉皮（街边烟火气特色老店，传门头照时可留空）" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 bg-slate-50/50 placeholder:text-slate-400" />
+          <label for="storeText" class="block text-sm font-semibold mb-1.5" style="color: var(--ink-primary);">餐厅店名 / 特色风味描述</label>
+          <input
+            id="storeText"
+            type="text"
+            placeholder="如：老潼关手工肉夹馍·红油凉皮（已传图可留空）"
+            class="studio-input px-3.5 py-2 text-sm"
+          />
         </div>
 
         <!-- 餐饮垂直品类模型 -->
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5">餐饮细分品类与调性模型</label>
-          <select id="industryType" class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
-            <option value="地方特色小吃快餐（如潼关肉夹馍/凉皮/手工面），强调现烤千层掉渣、腊汁肉爆汁、烟火气浓郁、性价比极高" selected>🍲 地方特色小吃/快餐面点（潼关肉夹馍/凉皮专属模型）</option>
-            <option value="火锅串串/烧烤大排档，强调热气腾腾锅底红亮、大串烤肉滋滋冒油、夜市热闹氛围与超值聚餐福利">🔥 火锅串串/烧烤排档（夜市烟火气高转化）</option>
-            <option value="特色正餐/地方菜馆，强调招牌硬菜现炒现做、锅气十足、家庭聚餐与老字号口碑">🥢 特色正餐/私房菜馆（重锅气与招牌菜）</option>
-            <option value="新中式茶饮/甜品烘焙，强调高颜值出片、新鲜原叶鲜奶、现烤出炉爆浆与年轻达人打卡">🧋 奶茶饮品/烘焙甜品（高颜值出片探店）</option>
+          <label for="industryType" class="block text-sm font-semibold mb-1.5" style="color: var(--ink-primary);">餐饮细分品类与调性模型</label>
+          <select id="industryType" class="studio-input px-3 py-2 text-sm">
+            <option value="地方特色小吃快餐（如潼关肉夹馍/凉皮/手工面），强调现烤千层掉渣、腊汁肉爆汁、烟火气浓郁、性价比极高" selected>🍲 地方小吃 / 快餐面点（肉夹馍/凉皮）</option>
+            <option value="火锅串串/烧烤大排档，强调热气腾腾锅底红亮、大串烤肉滋滋冒油、夜市热闹氛围与超值聚餐福利">🔥 火锅串串 / 烧烤排档（夜市烟火气）</option>
+            <option value="特色正餐/地方菜馆，强调招牌硬菜现炒现做、锅气十足、家庭聚餐与老字号口碑">🥢 特色正餐 / 私房菜馆（重锅气招牌菜）</option>
+            <option value="新中式茶饮/甜品烘焙，强调高颜值出片、新鲜原叶鲜奶、现烤出炉爆浆与年轻达人打卡">🧋 奶茶饮品 / 烘焙甜品（高颜值打卡）</option>
           </select>
         </div>
 
         <!-- 核心卖点 / 团购套餐 -->
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5">团购福利套餐 / 核心卖点</label>
-          <textarea id="sellingPoints" rows="2" placeholder="例如：现烤千层酥脆肉夹馍 + 秘制老潼关红油凉皮，原价38元招牌双人餐现在限时19.9！（选填，不填时 AI 自动策划爆款）" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 bg-slate-50/50 placeholder:text-slate-400"></textarea>
+          <label for="sellingPoints" class="block text-sm font-semibold mb-1.5" style="color: var(--ink-primary);">团购福利套餐 / 核心卖点</label>
+          <textarea
+            id="sellingPoints"
+            rows="2"
+            placeholder="如：现烤千层肉夹馍 + 红油凉皮，原价38双人餐限时19.9（选填）"
+            class="studio-input px-3.5 py-2 text-sm resize-y"
+          ></textarea>
         </div>
 
         <!-- 视频时长选择 -->
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5">目标视频总时长（自动按 5 秒/镜黄金节奏拆解）</label>
-          <div class="grid grid-cols-3 gap-2.5">
-            <label class="cursor-pointer">
-              <input type="radio" name="duration" value="30" class="peer hidden" checked />
-              <div class="py-2.5 px-3 text-center rounded-xl border border-slate-200 peer-checked:border-orange-600 peer-checked:bg-orange-50 peer-checked:text-orange-700 transition">
+          <label class="block text-sm font-semibold mb-1.5" style="color: var(--ink-primary);">目标视频总时长（5 秒 / 镜黄金节奏）</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer block min-w-0">
+              <input type="radio" name="duration" value="30" class="sr-only" checked />
+              <div class="duration-card py-2 px-1 sm:px-2.5 text-center">
                 <div class="font-bold text-sm">30 秒</div>
-                <div class="text-[11px] text-slate-500">6 个分镜 · 餐饮黄金完播</div>
+                <div class="text-[11px] opacity-75 mt-0.5 leading-tight">6 镜 · 黄金完播</div>
               </div>
             </label>
-            <label class="cursor-pointer">
-              <input type="radio" name="duration" value="45" class="peer hidden" />
-              <div class="py-2.5 px-3 text-center rounded-xl border border-slate-200 peer-checked:border-orange-600 peer-checked:bg-orange-50 peer-checked:text-orange-700 transition">
+            <label class="cursor-pointer block min-w-0">
+              <input type="radio" name="duration" value="45" class="sr-only" />
+              <div class="duration-card py-2 px-1 sm:px-2.5 text-center">
                 <div class="font-bold text-sm">45 秒</div>
-                <div class="text-[11px] text-slate-500">9 个分镜 · 菜品深度呈现</div>
+                <div class="text-[11px] opacity-75 mt-0.5 leading-tight">9 镜 · 菜品精讲</div>
               </div>
             </label>
-            <label class="cursor-pointer">
-              <input type="radio" name="duration" value="60" class="peer hidden" />
-              <div class="py-2.5 px-3 text-center rounded-xl border border-slate-200 peer-checked:border-orange-600 peer-checked:bg-orange-50 peer-checked:text-orange-700 transition">
+            <label class="cursor-pointer block min-w-0">
+              <input type="radio" name="duration" value="60" class="sr-only" />
+              <div class="duration-card py-2 px-1 sm:px-2.5 text-center">
                 <div class="font-bold text-sm">60 秒</div>
-                <div class="text-[11px] text-slate-500">12 个分镜 · 全套宴席种草</div>
+                <div class="text-[11px] opacity-75 mt-0.5 leading-tight">12 镜 · 盛宴种草</div>
               </div>
             </label>
           </div>
@@ -247,19 +590,19 @@
 
         <!-- 探店风格与人设 -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">探店脚本风格</label>
-            <select id="videoStyle" class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <div class="min-w-0">
+            <label for="videoStyle" class="block text-sm font-semibold mb-1.5" style="color: var(--ink-primary);">探店脚本风格</label>
+            <select id="videoStyle" class="studio-input px-3 py-2 text-sm">
               <option value="本地吃货达人真实测评风（开头强反差钩子+大口吃播真实特写+福利收尾）" selected>吃货达人真实测评风</option>
               <option value="剧情反转省钱攻略风（误以为吃不起名店结果账单真香打脸）">剧情反转省钱打脸风</option>
               <option value="沉浸式后厨第一视角（少废话多声效，突出制作过程与酥脆出汁）">沉浸式后厨解压风</option>
               <option value="老板/大厨真诚大放福利风（大厨亮招牌手艺，老板亲自放神价券）">老掌柜放漏福利风</option>
             </select>
           </div>
-          <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">达人形象设定</label>
-            <select id="hostPersona" class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
-              <option value="24岁亲和力邻家女生，扎清爽高马尾，浅米色工装休闲衬衫，笑容灿烂治愈，地道吃货属性，真实接地气" selected>活力吃货邻家女生（百搭）</option>
+          <div class="min-w-0">
+            <label for="hostPersona" class="block text-sm font-semibold mb-1.5" style="color: var(--ink-primary);">达人形象设定</label>
+            <select id="hostPersona" class="studio-input px-3 py-2 text-sm">
+              <option value="24岁亲和力邻家女生，扎清爽高马尾，浅米色工装休闲衬衫，笑容灿烂治愈，地道吃货属性，真实接地气" selected>活力吃货邻家女生</option>
               <option value="27岁阳光干练男吃播，短发干净利落，黑色工装围裙与纯色短袖，说话有底气有信赖感">阳光干练男探店官</option>
               <option value="32岁朴实热情老陕大哥，微胖有福相，藏青色纯棉T恤，像老街坊熟人般实在">热情豪爽本地大哥</option>
               <option value="25岁精致美食博主女生，淡妆丸子头，浅黄休闲毛衣，吃相优雅治愈有食欲">精致治愈系女吃播</option>
@@ -268,56 +611,133 @@
         </div>
 
         <!-- 校验提示条 -->
-        <div id="formErrorBanner" class="hidden rounded-xl bg-red-50 border border-red-200 text-red-700 px-3.5 py-2.5 text-xs sm:text-sm font-medium"></div>
+        <div id="formErrorBanner" class="hidden rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-medium" style="background: var(--danger-soft); border: 1px solid var(--danger-border); color: var(--danger);"></div>
 
         <!-- 生成按钮 -->
-        <button id="generateBtn" type="button" onclick="generatePrompts()" class="w-full py-4 px-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 active:from-orange-800 active:to-amber-800 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 text-base">
-          <span id="generateBtnText">🚀 一键生成餐饮探店提示词与分镜全案</span>
+        <button
+          id="generateBtn"
+          type="button"
+          onclick="generatePrompts()"
+          class="btn-interactive btn-primary w-full py-3.5 px-4 font-bold rounded-xl flex items-center justify-center gap-2 text-[15px]"
+        >
+          <span id="generateBtnIcon">🎬</span>
+          <span id="generateBtnText">一键生成探店分镜与提示词全案</span>
         </button>
       </div>
     </section>
 
     <!-- 右侧：输出结果面板 (占7列) -->
-    <section class="lg:col-span-7 space-y-5">
+    <section id="outputPanel" class="lg:col-span-7 space-y-5 scroll-mt-28 sm:scroll-mt-24">
       <!-- 初始空状态 -->
-      <div id="emptyState" class="bg-white rounded-2xl p-10 border border-slate-200 text-center space-y-4 h-full flex flex-col items-center justify-center min-h-[460px]">
-        <div class="w-20 h-20 rounded-3xl bg-orange-50 text-orange-600 flex items-center justify-center text-4xl shadow-inner">🍜</div>
-        <div class="space-y-1.5">
-          <h3 class="text-lg font-bold text-slate-800">等待生成餐饮探店分镜方案</h3>
-          <p class="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-            在左侧上传餐饮门头照，AI 将自动执行<strong>门头识别、编剧策划、食欲动作与 Seedance 物理运镜编译</strong>。
+      <div id="emptyState" class="surface-card p-6 sm:p-10 text-center space-y-5 flex flex-col items-center justify-center min-h-[420px] sm:min-h-[480px]">
+        <div class="w-20 h-20 rounded-3xl flex items-center justify-center shadow-inner" style="background: linear-gradient(145deg, #fbf2ed 0%, #f5e5dc 100%); border: 1px solid var(--accent-border); color: var(--accent);">
+          <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="3" />
+            <path d="M7 4v16M17 4v16M2 9.5h5M17 9.5h5M2 14.5h5M17 14.5h5" />
+            <polygon points="10.5 9.5 14.5 12 10.5 14.5 10.5 9.5" fill="currentColor" stroke="none" />
+          </svg>
+        </div>
+        <div class="space-y-2 max-w-md mx-auto">
+          <h3 class="type-h1">等待生成餐饮探店分镜方案</h3>
+          <p class="type-body">
+            在左侧上传门头照片或填写店名，工作台将自动完成
+            <strong style="color: var(--ink-primary);">门头识别、爆款编剧、定妆锚点与 Seedance 物理运镜编译</strong>。
           </p>
         </div>
-        <div class="pt-2 flex flex-col sm:flex-row gap-2.5">
-          <button type="button" onclick="loadDemoResult()" class="text-xs px-4 py-2 bg-amber-50 text-amber-800 border border-amber-300 rounded-xl hover:bg-amber-100 font-semibold transition">
-            ⚡ 体验老潼关肉夹馍标准案例
+        <div class="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-md pt-1">
+          <div class="surface-subcard p-2.5 sm:p-3 text-center">
+            <div class="text-xs font-semibold" style="color: var(--ink-primary);">首帧锁门头</div>
+            <div class="text-[11px] mt-0.5" style="color: var(--ink-muted);">招牌不乱码</div>
+          </div>
+          <div class="surface-subcard p-2.5 sm:p-3 text-center">
+            <div class="text-xs font-semibold" style="color: var(--ink-primary);">达人一致性</div>
+            <div class="text-[11px] mt-0.5" style="color: var(--ink-muted);">底图锁形象</div>
+          </div>
+          <div class="surface-subcard p-2.5 sm:p-3 text-center">
+            <div class="text-xs font-semibold" style="color: var(--ink-primary);">5秒黄金镜</div>
+            <div class="text-[11px] mt-0.5" style="color: var(--ink-muted);">16-22字口播</div>
+          </div>
+        </div>
+        <div class="pt-1">
+          <button
+            type="button"
+            onclick="loadDemoResult()"
+            class="btn-interactive btn-soft-amber text-xs sm:text-sm px-4 py-2.5 rounded-xl font-semibold inline-flex items-center gap-1.5"
+          >
+            <span>⚡</span>
+            <span>立即体验「老潼关肉夹馍」完整演示案例</span>
           </button>
         </div>
       </div>
 
-      <!-- 加载中状态 -->
-      <div id="loadingState" class="hidden bg-white rounded-2xl p-12 border border-slate-200 text-center space-y-4 min-h-[460px] flex flex-col items-center justify-center">
-        <div class="w-14 h-14 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin"></div>
-        <div class="space-y-1.5">
-          <h3 class="text-base font-bold text-slate-800" id="loadingText">正在识图分析餐饮门头并生成探店方案...</h3>
-          <p class="text-xs text-slate-400">正在锁定人物定妆底图、注入环境一致性锚点并编译 5 秒物理运镜（约需 8~15 秒）</p>
+      <!-- 加载中状态（动画 + 轮播提示文案 + 阶段指示） -->
+      <div id="loadingState" class="hidden surface-card p-6 sm:p-12 text-center space-y-6 min-h-[420px] sm:min-h-[480px] flex flex-col items-center justify-center">
+        <div class="relative w-20 h-20 flex items-center justify-center">
+          <div class="loading-ring-outer absolute inset-0 rounded-full" style="background: radial-gradient(circle, rgba(200, 90, 50, 0.16) 0%, transparent 70%);"></div>
+          <div class="loading-arc absolute inset-1 rounded-full border-[3px] border-[#efe6dc] border-t-[#c85a32]"></div>
+          <div class="w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm" style="background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border);">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+              <circle cx="12" cy="13" r="3" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="space-y-2 max-w-md mx-auto">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold" style="background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border);">
+            <span class="w-2 h-2 rounded-full animate-pulse" style="background: var(--accent);"></span>
+            <span>AI 导演工作台运行中 · <span id="loadingElapsed">0s</span></span>
+          </div>
+          <h3 id="loadingText" class="type-h1 loading-text-fade pt-1">正在识图解析门头招牌与烟火气…</h3>
+          <p id="loadingSubText" class="type-meta loading-text-fade">正在锁定人物定妆底图、注入环境一致性锚点并编译 5 秒物理运镜</p>
+        </div>
+
+        <!-- 平滑流光进度条 + 步骤指示 -->
+        <div class="w-full max-w-sm space-y-3">
+          <div class="h-1.5 w-full rounded-full overflow-hidden" style="background: var(--bg-inset);">
+            <div class="loading-sweep h-full w-2/5 rounded-full" style="background: linear-gradient(90deg, transparent, #c85a32, #e5936e, transparent);"></div>
+          </div>
+          <div id="loadingStepsGrid" class="grid grid-cols-4 gap-1.5 text-[11px] font-medium">
+            <div data-step="0" class="py-1 px-1.5 rounded-lg transition-colors" style="background: var(--accent-soft); color: var(--accent);">1. 门头识图</div>
+            <div data-step="1" class="py-1 px-1.5 rounded-lg transition-colors" style="background: var(--bg-inset); color: var(--ink-muted);">2. 爆款编剧</div>
+            <div data-step="2" class="py-1 px-1.5 rounded-lg transition-colors" style="background: var(--bg-inset); color: var(--ink-muted);">3. 分镜脚本</div>
+            <div data-step="3" class="py-1 px-1.5 rounded-lg transition-colors" style="background: var(--bg-inset); color: var(--ink-muted);">4. 运镜编译</div>
+          </div>
         </div>
       </div>
 
-      <!-- 错误与重试状态 -->
-      <div id="errorState" class="hidden bg-white rounded-2xl p-8 sm:p-10 border border-red-200 text-center space-y-4 min-h-[360px] flex flex-col items-center justify-center">
-        <div class="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center text-2xl">⚠️</div>
-        <div class="space-y-1.5 max-w-md">
-          <h3 class="text-base font-bold text-slate-900">这次没能顺利生成方案</h3>
-          <p id="errorMessageText" class="text-sm text-red-700 leading-relaxed"></p>
-          <p class="text-xs text-slate-500">您填写的店名和上传的照片都已保留，无需重填。</p>
+      <!-- 错误与大白话兜底重试状态 -->
+      <div id="errorState" class="hidden surface-card p-6 sm:p-10 text-center space-y-5 min-h-[380px] flex flex-col items-center justify-center" style="border-color: var(--danger-border);">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl" style="background: var(--danger-soft); border: 1px solid var(--danger-border); color: var(--danger);">
+          <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 8v5" />
+            <circle cx="12" cy="16.5" r="0.8" fill="currentColor" stroke="none" />
+          </svg>
         </div>
-        <div class="pt-1 flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto">
-          <button type="button" onclick="generatePrompts()" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold rounded-xl transition shadow-sm">
-            🔄 重新生成分镜方案
+        <div class="space-y-2 max-w-md mx-auto">
+          <span id="errorBadgeText" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style="background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger-border);">生成遇到小状况</span>
+          <h3 id="errorMessageText" class="type-h1">平台正忙，限流中</h3>
+          <p id="errorDetailText" class="type-body"></p>
+          <p id="errorHintText" class="type-meta">您填写的店名和上传的照片都已保留，无需重填。</p>
+        </div>
+        <div class="pt-1 flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full sm:w-auto">
+          <button
+            id="retryBtn"
+            type="button"
+            onclick="generatePrompts()"
+            class="btn-interactive btn-primary w-full sm:w-auto px-6 py-2.5 text-sm font-bold rounded-xl inline-flex items-center justify-center gap-1.5"
+          >
+            <span>🔄</span>
+            <span>重试生成</span>
           </button>
-          <button type="button" onclick="loadDemoResult()" class="px-4 py-2.5 bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 text-xs sm:text-sm font-semibold rounded-xl transition">
-            ⚡ 先看演示案例
+          <button
+            type="button"
+            onclick="loadDemoResult()"
+            class="btn-interactive btn-soft-amber w-full sm:w-auto px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl inline-flex items-center justify-center gap-1.5"
+          >
+            <span>⚡</span>
+            <span>先看演示案例</span>
           </button>
         </div>
       </div>
@@ -325,109 +745,167 @@
       <!-- 生成结果容器 -->
       <div id="resultContainer" class="hidden space-y-5">
         <!-- 0. AI门头诊断与爆款策略摘要 -->
-        <div class="bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 rounded-2xl p-5 text-white shadow-md">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-[11px] font-bold tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full uppercase">AI 餐饮诊断与爆款策略</span>
-            <span id="resMeta" class="text-xs text-amber-100 font-medium"></span>
+        <div class="strategy-banner p-5 sm:p-6 text-white">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+            <span class="text-[11px] font-semibold tracking-wider bg-white/15 border border-white/20 px-2.5 py-0.5 rounded-full">AI 餐饮诊断与爆款策略</span>
+            <span id="resMeta" class="text-xs text-amber-100/90 font-medium"></span>
           </div>
-          <h3 id="resTitle" class="text-lg font-bold"></h3>
-          <p id="resAnalysis" class="text-xs sm:text-sm text-amber-100 mt-1.5 leading-relaxed"></p>
+          <h3 id="resTitle" class="text-lg sm:text-xl font-bold leading-snug text-white"></h3>
+          <p id="resAnalysis" class="text-xs sm:text-sm text-stone-100/90 mt-2 leading-relaxed"></p>
         </div>
 
         <!-- 1. 前置底图提示词（锁死一致性） -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-            <div>
-              <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-1.5">
-                <span class="w-5 h-5 rounded-full bg-orange-100 text-orange-700 text-xs flex items-center justify-center font-bold">1</span>
-                第一步：生成「一致性参考底图」（在即梦先出图）
-              </h3>
-              <p class="text-xs text-slate-500 mt-0.5">出好这两张底图后作为后续所有镜头的参考图，彻底锁定达人长相与餐厅风格</p>
-            </div>
+        <div class="surface-card p-4 sm:p-6 space-y-4">
+          <div class="pb-3 border-b border-[#efeae2]">
+            <h3 class="type-h2 flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold shrink-0" style="background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border);">1</span>
+              <span>第一步：生成「一致性参考底图」（先在即梦出图）</span>
+            </h3>
+            <p class="type-meta mt-1">先出好这两张底图作为后续所有分镜的参考图，彻底锁定达人长相与餐厅烟火气</p>
           </div>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             <!-- 达人定妆照 -->
-            <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200 flex flex-col justify-between gap-2.5">
-              <div>
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-                  <span class="text-xs font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded">1. 达人白底定妆照（9:16）</span>
-                  <button type="button" onclick="copyText('charPromptText', this)" class="text-xs px-2.5 py-1 bg-white border border-slate-300 hover:border-orange-500 hover:text-orange-600 rounded-lg font-medium transition shadow-sm">复制</button>
+            <div class="surface-subcard p-3.5 sm:p-4 flex flex-col justify-between gap-2.5 min-w-0">
+              <div class="space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="text-xs font-semibold px-2.5 py-0.5 rounded-md" style="background: var(--accent-soft); color: var(--accent-active); border: 1px solid var(--accent-border);">1. 达人白底定妆照（9:16）</span>
+                  <button type="button" onclick="copyText('charPromptText', this)" class="btn-interactive btn-ghost text-xs px-2.5 py-1 rounded-lg font-medium">复制</button>
                 </div>
-                <p id="charPromptText" class="text-xs text-slate-700 leading-relaxed font-mono bg-white p-2.5 rounded-lg border border-slate-200/80"></p>
+                <p id="charPromptText" class="text-xs leading-relaxed font-mono bg-white p-3 rounded-xl border border-[#eae5dc]" style="color: var(--ink-secondary);"></p>
               </div>
             </div>
             <!-- 店内空镜参考图 -->
-            <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200 flex flex-col justify-between gap-2.5">
-              <div>
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-                  <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">2. 餐厅主场景空镜图（9:16）</span>
-                  <button type="button" onclick="copyText('scenePromptText', this)" class="text-xs px-2.5 py-1 bg-white border border-slate-300 hover:border-emerald-500 hover:text-emerald-600 rounded-lg font-medium transition shadow-sm">复制</button>
+            <div class="surface-subcard p-3.5 sm:p-4 flex flex-col justify-between gap-2.5 min-w-0">
+              <div class="space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="text-xs font-semibold px-2.5 py-0.5 rounded-md" style="background: var(--sage-soft); color: var(--sage); border: 1px solid var(--sage-border);">2. 餐厅主场景空镜图（9:16）</span>
+                  <button type="button" onclick="copyText('scenePromptText', this)" class="btn-interactive btn-ghost text-xs px-2.5 py-1 rounded-lg font-medium">复制</button>
                 </div>
-                <p id="scenePromptText" class="text-xs text-slate-700 leading-relaxed font-mono bg-white p-2.5 rounded-lg border border-slate-200/80"></p>
+                <p id="scenePromptText" class="text-xs leading-relaxed font-mono bg-white p-3 rounded-xl border border-[#eae5dc]" style="color: var(--ink-secondary);"></p>
               </div>
             </div>
           </div>
         </div>
 
         <!-- 2. 分镜视频提示词卡片列表 -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-            <div>
-              <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-1.5">
-                <span class="w-5 h-5 rounded-full bg-orange-100 text-orange-700 text-xs flex items-center justify-center font-bold">2</span>
-                第二步：逐镜生成视频（复制进即梦 / 豆包 Seedance）
+        <div class="surface-card p-4 sm:p-6 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#efeae2]">
+            <div class="min-w-0">
+              <h3 class="type-h2 flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold shrink-0" style="background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border);">2</span>
+                <span>第二步：逐镜生成视频（即梦 / 豆包 Seedance）</span>
               </h3>
-              <p class="text-xs text-slate-500 mt-0.5">每镜固定 5 秒，已注入外貌、菜品特写与物理运镜指令，按卡片提示上传参考图即可</p>
+              <p class="type-meta mt-1">每镜固定 5 秒，已注入外貌、菜品特写与物理运镜指令，按标签上传参考图即可</p>
             </div>
-            <button type="button" onclick="copyAllShots(this, event)" class="text-xs px-3.5 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 rounded-lg font-bold transition shadow-sm">
-              📋 一键复制全部分镜提示词
+            <button
+              type="button"
+              onclick="copyAllShots(this, event)"
+              class="btn-interactive btn-soft-amber w-full sm:w-auto shrink-0 text-xs px-3.5 py-2 rounded-xl font-semibold inline-flex items-center justify-center gap-1.5"
+            >
+              <span>📋</span>
+              <span>一键复制全部分镜提示词</span>
             </button>
           </div>
           <div id="shotsList" class="space-y-3.5"></div>
         </div>
 
         <!-- 3. 剪映纯享版口播台词与脚本导出 -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-            <div>
-              <h3 class="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-1.5">
-                <span class="w-5 h-5 rounded-full bg-orange-100 text-orange-700 text-xs flex items-center justify-center font-bold">3</span>
-                第三步：剪映后期配音与脚本导出
+        <div class="surface-card p-4 sm:p-6 space-y-3.5">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#efeae2]">
+            <div class="min-w-0">
+              <h3 class="type-h2 flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold shrink-0" style="background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border);">3</span>
+                <span>第三步：剪映后期配音与脚本导出</span>
               </h3>
-              <p class="text-xs text-slate-500 mt-0.5">片段拼好后直接粘贴进剪映配音与自动字幕，支持全案导出存档</p>
+              <p class="type-meta mt-1">片段拼接后直接粘贴进剪映配音与识别字幕，支持导出全套 TXT 文档存档</p>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <button type="button" onclick="downloadScriptFile()" class="text-xs px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 rounded-lg font-medium transition">
-                💾 导出 TXT 脚本
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <button type="button" onclick="downloadScriptFile()" class="btn-interactive btn-ghost text-xs px-3 py-2 rounded-xl font-medium inline-flex items-center gap-1.5">
+                <span>💾</span>
+                <span>导出 TXT 脚本</span>
               </button>
-              <button type="button" onclick="copyText('fullVoiceoverText', this)" class="text-xs px-3.5 py-1.5 bg-slate-900 text-white hover:bg-slate-800 rounded-lg font-medium transition shadow-sm">
-                🎙️ 复制纯台词
+              <button type="button" onclick="copyText('fullVoiceoverText', this)" class="btn-interactive btn-dark text-xs px-3.5 py-2 rounded-xl font-medium inline-flex items-center gap-1.5">
+                <span>🎙️</span>
+                <span>复制纯台词</span>
               </button>
             </div>
           </div>
-          <div id="fullVoiceoverText" class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm text-slate-800 leading-relaxed whitespace-pre-line font-medium"></div>
+          <div id="fullVoiceoverText" class="p-4 rounded-xl text-sm leading-relaxed whitespace-pre-line font-medium border border-[#eae5dc]" style="background: var(--bg-subtle); color: var(--ink-primary);"></div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="bg-white border-t border-slate-200 py-4 px-4 text-center text-xs text-slate-500">
-    <p>AI 探店视频分镜与提示词工作台 · 专为即梦AI / 豆包视频（Seedance 模型）深度定制</p>
+  <footer class="border-t py-5 px-4 text-center text-xs" style="background: rgba(255, 254, 252, 0.72); border-color: var(--border-soft); color: var(--ink-muted);">
+    <p>AI 探店视频分镜与提示词工作台 · 专为即梦 AI / 豆包视频（Seedance 模型）深度定制</p>
   </footer>
 
-  <a class="back-portal-capsule" href="https://aweiblog.asia/" target="_blank" rel="noopener noreferrer">← 返回阿伟主站</a>
+  <a class="back-portal-capsule" href="https://aweiblog.asia/" target="_blank" rel="noopener noreferrer" aria-label="返回阿伟主站">
+    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M19 12H5" />
+      <path d="M12 19l-7-7 7-7" />
+    </svg>
+    <span>返回阿伟主站</span>
+  </a>
 
   <div id="toastContainer" class="fixed bottom-16 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <script>
-    // 后台内置全自动 API 配置（不向前端暴露配置面板，完全后台运营）
+    // 后台内置全自动 API 配置（不向前端暴露配置面板，完全通过 Pages Function 安全代理）
     const INTERNAL_CONFIG = {
       endpoint: '/api/ai',
-      model: 'agnes-3.0-flash'
+      model: 'agnes-3.0-flash',
+      clientTimeoutMs: 95000
     };
+
+    // 线性图标库（统一 SVG 语言体系，替代散落的 emoji，与头部/空态/加载区图标一致）
+    const ICONS = {
+      bolt: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>',
+      clapper: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2" /><path d="M4 16v2a2 2 0 0 0 2 2h2" /><path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2a2 2 0 0 1 2-2v-2" /><polygon points="10 8.5 16 12 10 15.5 10 8.5" fill="currentColor" stroke="none" /></svg>',
+      reload: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36" /><polyline points="21 3 21 9 15 9" /></svg>',
+      clipboard: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4V2h6v2" /><path d="M9 10h6M9 14h6M9 18h4" /></svg>',
+      download: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12" /><polyline points="7 10 12 15 17 10" /><path d="M4 19h16" /></svg>',
+      check: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>',
+      warn: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4" /><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none" /></svg>',
+      info: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 8v.5" /><path d="M12 11v5" /></svg>'
+    };
+
+    const LOADING_STAGES = [
+      {
+        step: 0,
+        title: '正在识图解析门头招牌与烟火气…',
+        sub: '提取店名招牌、菜品风味、门店调性与街景光影细节'
+      },
+      {
+        step: 1,
+        title: '正在提炼招牌卖点与爆款切入钩子…',
+        sub: '策划前 3 秒留人冲突、核心菜品诱惑与团购福利收口'
+      },
+      {
+        step: 2,
+        title: '正在生成分镜脚本…',
+        sub: '逐镜安排 5 秒黄金节奏、16~22 字口语化口播与机位切换'
+      },
+      {
+        step: 2,
+        title: '正在锁定达人定妆与场景一致性锚点…',
+        sub: '生成 9:16 人物定妆底图与店内空镜底图指令，防止 AI 换脸跳戏'
+      },
+      {
+        step: 3,
+        title: '正在编译即梦 / 豆包 Seedance 物理运镜…',
+        sub: '注入推拉摇移镜头语言、酥脆掉渣热气特写与 4K 实拍质感词'
+      }
+    ];
 
     let uploadedImageBase64 = null;
     let currentGeneratedData = null;
+    let isGenerating = false;
+    let loadingRotateTimer = null;
+    let loadingElapsedTimer = null;
+    let loadingStageIndex = 0;
+    let loadingStartAt = 0;
 
     function escapeHtml(value) {
       return String(value ?? '')
@@ -438,17 +916,144 @@
         .replace(/'/g, '&#39;');
     }
 
+    // 保留并强化敏感信息脱敏逻辑：绝不透出 Key / Token / 账号 ID / 长数字等内部细节
+    function sanitizeSensitiveText(raw) {
+      if (typeof raw !== 'string') return '';
+      return raw
+        .trim()
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\bsk-[a-z0-9_*-]*(?:\.+[a-z0-9_*-]+)*/gi, '[已隐去]')
+        .replace(/\bBearer\s+[a-z0-9._~+/=-]+/gi, 'Bearer [已隐去]')
+        .replace(/\bAGNES_[A-Z0-9_]+\b/g, '[已隐去]')
+        .replace(/\bAIza[0-9A-Za-z_-]{10,}\b/g, '[已隐去]')
+        .replace(/((?:account|user|uid|tenant|org|member|customer)[_-]?\s*id[\s:=#]*|账号\s*(?:id)?[\s:：=#-]*|用户\s*id[\s:：=#-]*)(?=[a-z0-9_-]*\d)[a-z0-9_-]{4,}/gi, '$1[已隐去]')
+        .replace(/\d{6,}/g, '[已隐去]')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    // 异常大白话分类器：确保 429/1015、超时、5xx、断网与未知错误全部输出友好中文，绝不甩英文报错
+    function normalizeErrorDisplay(errorInput) {
+      const status = typeof errorInput?.status === 'number' ? errorInput.status : 0;
+      const errName = errorInput?.name || '';
+      const rawText = sanitizeSensitiveText(
+        errorInput?.rawMessage || errorInput?.message || ''
+      );
+      const lower = rawText.toLowerCase();
+
+      // 1. 429 限流（含 Cloudflare 1015 及常见限流提示）
+      const isRateLimit =
+        status === 429 ||
+        /\b1015\b/.test(rawText) ||
+        /rate\s*limit|too\s*many\s*requests|throttl|quota\s*exceeded|限流|请求过于频繁|并发超限|人数较多/.test(lower);
+      if (isRateLimit) {
+        return {
+          badge: '当前请求高峰',
+          title: '平台正忙，限流中',
+          detail: '当前使用探店生成的老板和达人较多，AI 引擎正在限流排队中，请稍等几秒后点击「重试」。',
+          hint: '您填写的店名和上传的门头照片都已完整保留，无需重填。'
+        };
+      }
+
+      // 2. 请求超时（504 / 408 / 524 / AbortError）
+      const isTimeout =
+        status === 408 ||
+        status === 504 ||
+        status === 524 ||
+        errName === 'AbortError' ||
+        /timeout|timed\s*out|abort|超时/.test(lower);
+      if (isTimeout) {
+        return {
+          badge: '响应超时',
+          title: '生成超时了，AI 思考太久',
+          detail: '本次门头识图或长分镜编译用时超出预期，建议点击下方「重试」重新发起一次。',
+          hint: '如上传了超大原图，也可换一张清晰常规尺寸照片，响应会更快。'
+        };
+      }
+
+      // 3. 5xx 服务端或上游代理波动
+      const isServerError =
+        (status >= 500 && status < 600) ||
+        /internal\s*server|bad\s*gateway|service\s*unavailable|upstream|server\s*error|服务配置异常|代理请求上游|响应异常/.test(lower);
+      if (isServerError) {
+        return {
+          badge: '服务临时波动',
+          title: 'AI 服务暂时开小差了',
+          detail: '后台生成节点刚刚出现短暂波动，通常稍等几秒点「重试」就能恢复正常。',
+          hint: '已为您保留全部输入与参考图；着急查看格式也可先点击「先看演示案例」。'
+        };
+      }
+
+      // 4. 离线或网络断连
+      const isNetworkOffline =
+        (typeof navigator !== 'undefined' && navigator.onLine === false) ||
+        errName === 'TypeError' ||
+        /failed\s*to\s*fetch|networkerror|network\s*error|load\s*failed|internet\s*disconnected|econn/.test(lower);
+      if (isNetworkOffline) {
+        return {
+          badge: '网络未连接',
+          title: '网络连接好像断开了',
+          detail: '暂时无法连接到云端 AI 服务，请检查手机或电脑的网络畅通后再点「重试」。',
+          hint: '页面上已填入的信息不会丢失。'
+        };
+      }
+
+      // 5. 413 负载过大
+      if (status === 413 || /payload\s*too\s*large|entity\s*too\s*large|过大/.test(lower)) {
+        return {
+          badge: '图片体积提醒',
+          title: '门头照片稍微有点大',
+          detail: '上传的照片经过压缩后依然偏大，请更换一张常规大小的门店照片后再点击「重试」。',
+          hint: '也可以直接用文字描述店名和招牌特色来生成。'
+        };
+      }
+
+      // 6. 分镜结构解析异常
+      if (/结构解析|数据结构|未返回有效分镜|不完整|格式异常/.test(rawText)) {
+        return {
+          badge: '排版校验未通过',
+          title: '分镜排版刚没对齐',
+          detail: 'AI 这次输出的分镜格式遇到小波动，请直接点击「重试」重新为您编排一版完整方案。',
+          hint: '您的门头照片与门店信息已安全保留。'
+        };
+      }
+
+      // 7. 其他未知异常：过滤英文原始报错与异常代码，保证只输出纯中文大白话
+      const hasChinese = /[\u4e00-\u9fa5]/.test(rawText);
+      const hasEnglishSentenceOrKeyword =
+        /[a-zA-Z]{2,}\s+[a-zA-Z]{2,}/.test(rawText) ||
+        /\b(error|exception|failed|invalid|unauthorized|forbidden|unexpected|syntaxerror|typeerror|fetch|http|null|undefined|nan)\b/i.test(rawText);
+      const looksLikeRawCodeOrEnglish = !rawText || !hasChinese || hasEnglishSentenceOrKeyword;
+
+      if (looksLikeRawCodeOrEnglish) {
+        return {
+          badge: '生成受阻',
+          title: '这次没能顺利生成方案',
+          detail: 'AI 创作通道暂时出现波动，请点击下方「重试」再来一次。',
+          hint: '您填写的店名和上传的照片都已保留，无需重填。'
+        };
+      }
+
+      return {
+        badge: '温馨提示',
+        title: '这次没能顺利生成方案',
+        detail: rawText.slice(0, 100),
+        hint: '请调整信息后点击「重试」，或先查看演示案例。'
+      };
+    }
+
     function showToast(message, type = 'success') {
       const container = document.getElementById('toastContainer');
       if (!container || !message) return;
       const toast = document.createElement('div');
-      const toneClass = type === 'error'
-        ? 'bg-red-600 text-white border border-red-500'
+      const toneStyle = type === 'error'
+        ? 'background: #b9382c; color: #ffffff; border: 1px solid #9e2d22;'
         : type === 'info'
-          ? 'bg-amber-600 text-white border border-amber-500'
-          : 'bg-slate-900/95 text-white border border-slate-700';
+          ? 'background: #9a6324; color: #ffffff; border: 1px solid #82531d;'
+          : 'background: #292521; color: #faf8f5; border: 1px solid #1f1c18;';
       const icon = type === 'error' ? '⚠️' : type === 'info' ? '💡' : '✅';
-      toast.className = `${toneClass} px-3.5 py-2.5 rounded-xl shadow-lg text-xs sm:text-sm font-medium flex items-center gap-2 transition-all duration-300 opacity-0 translate-y-2`;
+      toast.setAttribute('style', toneStyle);
+      toast.className = 'px-3.5 py-2.5 rounded-xl shadow-lg text-xs sm:text-sm font-medium flex items-center gap-2 transition-all duration-300 opacity-0 translate-y-2';
       toast.innerHTML = `<span>${icon}</span><span>${escapeHtml(message)}</span>`;
       container.appendChild(toast);
       requestAnimationFrame(() => {
@@ -474,23 +1079,139 @@
       banner.classList.add('hidden');
     }
 
-    function showErrorState(message) {
+    function applyLoadingStage(stage) {
+      const textEl = document.getElementById('loadingText');
+      const subEl = document.getElementById('loadingSubText');
+      const stepEls = document.querySelectorAll('#loadingStepsGrid [data-step]');
+      if (textEl && subEl) {
+        textEl.classList.add('is-swapping');
+        subEl.classList.add('is-swapping');
+        setTimeout(() => {
+          textEl.textContent = stage.title;
+          subEl.textContent = stage.sub;
+          textEl.classList.remove('is-swapping');
+          subEl.classList.remove('is-swapping');
+        }, 180);
+      }
+      stepEls.forEach((el) => {
+        const idx = Number(el.getAttribute('data-step'));
+        if (idx === stage.step) {
+          el.style.background = 'var(--accent-soft)';
+          el.style.color = 'var(--accent)';
+        } else if (idx < stage.step) {
+          el.style.background = 'var(--sage-soft)';
+          el.style.color = 'var(--sage)';
+        } else {
+          el.style.background = 'var(--bg-inset)';
+          el.style.color = 'var(--ink-muted)';
+        }
+      });
+    }
+
+    function startLoadingAnimation() {
+      stopLoadingAnimation();
+      loadingStageIndex = 0;
+      loadingStartAt = Date.now();
+
+      const elapsedEl = document.getElementById('loadingElapsed');
+      if (elapsedEl) elapsedEl.textContent = '0s';
+
+      const textEl = document.getElementById('loadingText');
+      const subEl = document.getElementById('loadingSubText');
+      if (textEl) textEl.textContent = LOADING_STAGES[0].title;
+      if (subEl) subEl.textContent = LOADING_STAGES[0].sub;
+      applyLoadingStage(LOADING_STAGES[0]);
+
+      loadingRotateTimer = setInterval(() => {
+        loadingStageIndex = (loadingStageIndex + 1) % LOADING_STAGES.length;
+        applyLoadingStage(LOADING_STAGES[loadingStageIndex]);
+      }, 2400);
+
+      loadingElapsedTimer = setInterval(() => {
+        if (!elapsedEl) return;
+        const sec = Math.max(0, Math.floor((Date.now() - loadingStartAt) / 1000));
+        elapsedEl.textContent = `${sec}s`;
+      }, 1000);
+    }
+
+    function stopLoadingAnimation() {
+      if (loadingRotateTimer) {
+        clearInterval(loadingRotateTimer);
+        loadingRotateTimer = null;
+      }
+      if (loadingElapsedTimer) {
+        clearInterval(loadingElapsedTimer);
+        loadingElapsedTimer = null;
+      }
+    }
+
+    function scrollToOutputOnMobile() {
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+        const panel = document.getElementById('outputPanel');
+        panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function showErrorState(errorInput) {
+      stopLoadingAnimation();
+      const info = typeof errorInput === 'string'
+        ? normalizeErrorDisplay({ rawMessage: errorInput })
+        : normalizeErrorDisplay(errorInput || {});
+
       document.getElementById('loadingState').classList.add('hidden');
       document.getElementById('emptyState').classList.add('hidden');
       document.getElementById('resultContainer').classList.add('hidden');
-      const errorMsgEl = document.getElementById('errorMessageText');
-      if (errorMsgEl) {
-        errorMsgEl.textContent = message || '生成服务暂时遇到波动，请稍后重试。';
-      }
+
+      const badgeEl = document.getElementById('errorBadgeText');
+      const titleEl = document.getElementById('errorMessageText');
+      const detailEl = document.getElementById('errorDetailText');
+      const hintEl = document.getElementById('errorHintText');
+
+      if (badgeEl) badgeEl.textContent = info.badge;
+      if (titleEl) titleEl.textContent = info.title;
+      if (detailEl) detailEl.textContent = info.detail;
+      if (hintEl) hintEl.textContent = info.hint;
+
       document.getElementById('errorState').classList.remove('hidden');
+      scrollToOutputOnMobile();
     }
 
     document.getElementById('storeText')?.addEventListener('input', clearFormError);
 
+    // 绑定拖拽上传事件
+    (function setupDropZone() {
+      const dropZone = document.getElementById('dropZone');
+      if (!dropZone) return;
+
+      ['dragenter', 'dragover'].forEach((evtName) => {
+        dropZone.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.add('drop-zone-active');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach((evtName) => {
+        dropZone.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove('drop-zone-active');
+        });
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        const file = e.dataTransfer?.files?.[0];
+        if (!file) return;
+        processImageFile(file);
+      });
+    })();
+
     // 处理门头图片上传并压缩至 1024px
-    function handleImageUpload(event) {
-      const file = event?.target?.files?.[0];
-      if (!file) return;
+    function processImageFile(file) {
+      if (!file || !file.type || !file.type.startsWith('image/')) {
+        showToast('请上传 JPG / PNG / WebP 等常见图片文件', 'error');
+        return;
+      }
       const reader = new FileReader();
       reader.onload = function(e) {
         const img = new Image();
@@ -524,13 +1245,23 @@
         };
         img.src = e.target.result;
       };
+      reader.onerror = function() {
+        showToast('读取图片失败，请重新选择照片', 'error');
+      };
       reader.readAsDataURL(file);
+    }
+
+    function handleImageUpload(event) {
+      const file = event?.target?.files?.[0];
+      if (!file) return;
+      processImageFile(file);
     }
 
     function clearImage(e) {
       if (e) e.stopPropagation();
       uploadedImageBase64 = null;
-      document.getElementById('imageInput').value = '';
+      const input = document.getElementById('imageInput');
+      if (input) input.value = '';
       const preview = document.getElementById('imagePreview');
       if (preview) preview.removeAttribute('src');
       document.getElementById('uploadPlaceholder').classList.remove('hidden');
@@ -581,34 +1312,29 @@
 }`;
     }
 
-        // 工业级容错与自动修复 JSON 解析器
+    // 工业级容错与自动修复 JSON 解析器
     function safeJsonParse(rawStr) {
       if (!rawStr || typeof rawStr !== 'string') {
         throw new Error('未获取到有效的内容返回');
       }
 
       let cleaned = rawStr.trim();
-      // 剥离可能存在的 markdown 包裹符 (如 ```json ... ```)
       cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
 
-      // 提取最外层的大括号范围
       const firstBrace = cleaned.indexOf('{');
       const lastBrace = cleaned.lastIndexOf('}');
       if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
         cleaned = cleaned.substring(firstBrace, lastBrace + 1);
       }
 
-      // 第一轮尝试：直接解析
       try {
         return JSON.parse(cleaned);
       } catch {
         // 启动容错修复流程
       }
 
-      // 第二轮修复：清理尾部悬空逗号 (如 {"a": 1, })
       let repaired = cleaned.replace(/,\s*([}\]])/g, '$1');
 
-      // 第三轮修复：处理未闭合括号（防止长文本意外截断）
       const openBraces = (repaired.match(/\{/g) || []).length;
       const closeBraces = (repaired.match(/\}/g) || []).length;
       const openBrackets = (repaired.match(/\[/g) || []).length;
@@ -623,7 +1349,6 @@
         // 启动深度引号修复
       }
 
-      // 第四轮修复：智能转义值内部未转义的双引号
       try {
         const fixedQuotes = repaired.replace(/:\s*"([\s\S]*?)"(?=\s*[,}\]])/g, (match, p1) => {
           const sanitized = p1.replace(/"/g, '“');
@@ -636,9 +1361,12 @@
     }
 
     async function generatePrompts() {
+      if (isGenerating) return;
+
       const storeText = document.getElementById('storeText').value.trim();
       const sellingPoints = document.getElementById('sellingPoints').value.trim();
-      const duration = parseInt(document.querySelector('input[name="duration"]:checked').value, 10);
+      const durationEl = document.querySelector('input[name="duration"]:checked');
+      const duration = parseInt(durationEl ? durationEl.value : '30', 10);
       const shotCount = duration / 5;
       const style = document.getElementById('videoStyle').value;
       const persona = document.getElementById('hostPersona').value;
@@ -651,17 +1379,21 @@
       }
       clearFormError();
 
-      // 切换加载中
+      isGenerating = true;
       document.getElementById('emptyState').classList.add('hidden');
       document.getElementById('errorState').classList.add('hidden');
       document.getElementById('resultContainer').classList.add('hidden');
       document.getElementById('loadingState').classList.remove('hidden');
-      document.getElementById('generateBtn').disabled = true;
-      document.getElementById('generateBtn').classList.add('opacity-60');
+
+      const generateBtn = document.getElementById('generateBtn');
       const generateBtnText = document.getElementById('generateBtnText');
-      if (generateBtnText) {
-        generateBtnText.textContent = '⏳ 正在识图并编译分镜全案...';
-      }
+      const generateBtnIcon = document.getElementById('generateBtnIcon');
+      if (generateBtn) generateBtn.disabled = true;
+      if (generateBtnIcon) generateBtnIcon.textContent = '⏳';
+      if (generateBtnText) generateBtnText.textContent = '正在识图并编译分镜全案…';
+
+      startLoadingAnimation();
+      scrollToOutputOnMobile();
 
       const systemPrompt = buildSystemPrompt(duration, shotCount, style, persona, industry);
       const userText = `请为这家餐饮门店生成 ${duration} 秒（共 ${shotCount} 镜，每镜严格5秒）的 AI 探店视频分镜提示词全案。
@@ -678,15 +1410,19 @@
         });
       }
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), INTERNAL_CONFIG.clientTimeoutMs);
+
       try {
         const response = await fetch(INTERNAL_CONFIG.endpoint, {
           method: 'POST',
+          signal: controller.signal,
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             model: INTERNAL_CONFIG.model,
-            response_format: { type: "json_object" },
+            response_format: { type: 'json_object' },
             max_tokens: 8192,
             messages: [
               { role: 'system', content: systemPrompt },
@@ -697,20 +1433,19 @@
         });
 
         if (!response.ok) {
-          const errText = await response.text();
-          let errMsg = `AI 服务响应异常 (${response.status})`;
+          const errText = await response.text().catch(() => '');
+          let parsedMsg = '';
           try {
             const errJson = JSON.parse(errText);
-            const parsedMsg = errJson?.error?.message || errJson?.error || errJson?.message;
-            if (typeof parsedMsg === 'string' && parsedMsg.trim()) {
-              errMsg = parsedMsg.trim();
-            }
+            const candidate = errJson?.error?.message || errJson?.error || errJson?.message;
+            if (typeof candidate === 'string') parsedMsg = candidate;
           } catch {
-            if (errText && errText.trim().length > 0 && errText.trim().length < 200) {
-              errMsg = `${errMsg}: ${errText.trim()}`;
-            }
+            parsedMsg = errText;
           }
-          throw new Error(errMsg);
+          const err = new Error(parsedMsg || `HTTP_${response.status}`);
+          err.status = response.status;
+          err.rawMessage = parsedMsg || errText;
+          throw err;
         }
 
         let data;
@@ -723,21 +1458,23 @@
         const rawContent = data?.choices?.[0]?.message?.content;
         if (!rawContent || typeof rawContent !== 'string') {
           const apiErr = data?.error?.message || data?.error;
-          throw new Error(typeof apiErr === 'string' && apiErr.trim() ? apiErr.trim() : 'AI 未返回有效分镜内容，请再试一次。');
+          const err = new Error(typeof apiErr === 'string' && apiErr.trim() ? apiErr.trim() : 'AI 未返回有效分镜内容，请再试一次。');
+          err.rawMessage = typeof apiErr === 'string' ? apiErr : '';
+          throw err;
         }
 
         const parsed = safeJsonParse(rawContent);
-
         renderResult(parsed, duration, shotCount);
         showToast('餐饮探店分镜全案已生成！', 'success');
       } catch (err) {
-        showErrorState(err?.message || '生成服务暂时异常，请直接再次点击重新生成。');
+        showErrorState(err);
       } finally {
-        document.getElementById('generateBtn').disabled = false;
-        document.getElementById('generateBtn').classList.remove('opacity-60');
-        if (generateBtnText) {
-          generateBtnText.textContent = '🚀 一键生成餐饮探店提示词与分镜全案';
-        }
+        clearTimeout(timeoutId);
+        stopLoadingAnimation();
+        isGenerating = false;
+        if (generateBtn) generateBtn.disabled = false;
+        if (generateBtnIcon) generateBtnIcon.textContent = '🎬';
+        if (generateBtnText) generateBtnText.textContent = '一键生成探店分镜与提示词全案';
       }
     }
 
@@ -746,11 +1483,13 @@
         throw new Error('分镜方案数据结构不完整，请再点一次重新生成。');
       }
 
+      stopLoadingAnimation();
       currentGeneratedData = data;
       document.getElementById('loadingState').classList.add('hidden');
       document.getElementById('emptyState').classList.add('hidden');
       document.getElementById('errorState').classList.add('hidden');
       document.getElementById('resultContainer').classList.remove('hidden');
+      scrollToOutputOnMobile();
 
       document.getElementById('resTitle').textContent = data.store_title || 'AI 餐饮探店分镜执行全案';
       document.getElementById('resMeta').textContent = `总时长 ${duration} 秒 · 共 ${data.shots.length} 个 5秒分镜`;
@@ -760,7 +1499,7 @@
 
       const shotsContainer = document.getElementById('shotsList');
       shotsContainer.innerHTML = '';
-      let allVoiceovers = [];
+      const allVoiceovers = [];
 
       data.shots.forEach((shot, index) => {
         const shotNum = shot?.shot_num ?? (index + 1);
@@ -771,26 +1510,29 @@
         const promptText = shot?.video_prompt || shot?.prompt || shot?.description || '';
 
         allVoiceovers.push(`【镜${shotNum} | ${timeRange}】${voiceover}`);
-        const badgeColor = index === 0 ? 'bg-orange-100 text-orange-900 border-orange-300' : 'bg-blue-50 text-blue-700 border-blue-200';
+        const isFirstShot = index === 0;
+        const badgeStyle = isFirstShot
+          ? 'background: var(--accent-soft); color: var(--accent-active); border: 1px solid var(--accent-border);'
+          : 'background: var(--sage-soft); color: var(--sage); border: 1px solid var(--sage-border);';
 
         const card = document.createElement('div');
-        card.className = 'rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-2.5 hover:border-orange-400 transition';
+        card.className = 'surface-subcard p-3.5 sm:p-4 space-y-2.5 min-w-0';
         card.innerHTML = `
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <span class="px-2.5 py-0.5 rounded-md bg-slate-900 text-white text-xs font-bold">镜 ${escapeHtml(shotNum)}</span>
-              <span class="text-xs font-mono font-bold text-slate-700">${escapeHtml(timeRange)}</span>
-              <span class="text-xs px-2 py-0.5 rounded border ${badgeColor} font-semibold">${escapeHtml(refType)}</span>
+            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
+              <span class="px-2.5 py-0.5 rounded-md text-xs font-bold shrink-0" style="background: #292521; color: #faf8f5;">镜 ${escapeHtml(shotNum)}</span>
+              <span class="text-xs font-mono font-semibold shrink-0" style="color: var(--ink-secondary);">${escapeHtml(timeRange)}</span>
+              <span class="text-[11px] sm:text-xs px-2 py-0.5 rounded-md font-semibold max-w-full" style="${badgeStyle}">${escapeHtml(refType)}</span>
             </div>
-            <button type="button" onclick="copyDirectText(this, ${index})" class="text-xs px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium shadow-sm transition">
-              一键复制视频提示词
+            <button type="button" onclick="copyDirectText(this, ${index})" class="btn-interactive btn-primary text-xs px-3 py-1.5 rounded-lg font-medium shrink-0">
+              复制视频提示词
             </button>
           </div>
-          <div class="text-xs text-slate-700 bg-white px-3 py-2 rounded-lg border border-slate-200/80">
-            <span class="font-bold text-slate-900">🎙️ 口播台词：</span>“${escapeHtml(voiceover)}”
-            <span class="ml-2 text-orange-600 font-medium">(${escapeHtml(cameraMove)})</span>
+          <div class="text-xs bg-white px-3 py-2.5 rounded-xl border border-[#eae5dc] leading-relaxed" style="color: var(--ink-secondary);">
+            <span class="font-semibold" style="color: var(--ink-primary);">🎙️ 口播台词：</span>“${escapeHtml(voiceover)}”
+            ${cameraMove ? `<span class="inline-block ml-1.5 font-medium" style="color: var(--accent);">(${escapeHtml(cameraMove)})</span>` : ''}
           </div>
-          <div class="text-xs text-slate-800 leading-relaxed font-mono bg-white p-3 rounded-lg border border-slate-200 select-all">
+          <div class="text-xs leading-relaxed font-mono bg-white p-3 rounded-xl border border-[#eae5dc] select-all" style="color: var(--ink-primary);">
             ${escapeHtml(promptText)}
           </div>
         `;
@@ -820,15 +1562,17 @@
     function showCopiedFeedback(btn) {
       showToast('已复制到剪贴板', 'success');
       if (!btn) return;
-      const originalText = btn.textContent;
+      const originalHtml = btn.innerHTML;
       btn.textContent = '✅ 已复制';
       setTimeout(() => {
-        btn.textContent = originalText;
+        btn.innerHTML = originalHtml;
       }, 1500);
     }
 
     function copyText(elementId, btn) {
-      const text = document.getElementById(elementId).textContent.trim();
+      const el = document.getElementById(elementId);
+      const text = (el?.textContent || '').trim();
+      if (!text) return;
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(() => showCopiedFeedback(btn)).catch(() => fallbackCopy(text, btn));
       } else {
@@ -840,6 +1584,7 @@
       if (!currentGeneratedData || !Array.isArray(currentGeneratedData.shots) || !currentGeneratedData.shots[shotIndex]) return;
       const shot = currentGeneratedData.shots[shotIndex];
       const text = shot.video_prompt || shot.prompt || shot.description || '';
+      if (!text) return;
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(() => showCopiedFeedback(btn)).catch(() => fallbackCopy(text, btn));
       } else {
@@ -955,6 +1700,19 @@
       renderResult(demoData, 30, 6);
       showToast('已载入「老潼关肉夹馍」演示案例', 'info');
     }
+
+    // 全局未捕获异常兜底，保证页面永不白屏
+    window.addEventListener('error', (event) => {
+      if (isGenerating) {
+        showErrorState(event?.error || event?.message || '页面处理遇到小波动');
+      }
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+      if (isGenerating) {
+        event?.preventDefault?.();
+        showErrorState(event?.reason || '请求处理遇到波动');
+      }
+    });
   </script>
 </body>
 </html>
